@@ -356,3 +356,6 @@ test("flat and nested views return error when layout is called with no layout", 
     });
   });
 });
+
+
+// TODO: make tests for giving presenter and template paths for view create

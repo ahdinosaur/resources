@@ -1,4 +1,5 @@
-var resource = require('resource');
+var resource = require('resource'),
+    logger = resource.use('logger');
 
 var path = require('path'),
     fs = require('fs');
@@ -59,19 +60,13 @@ var View = function (options) {
 //
 // Loads a template file or directory by path
 //
-View.prototype.load = function (viewPath, cb) {
+View.prototype.load = function (cb) {
   var self = this;
-
-  //
-  // TODO: better currying of args
-  //
-  if(typeof cb !== 'function' && typeof viewPath === 'function') {
-    cb = viewPath;
-  }
 
   if (self.templatePath && !self.template) {
     // TODO: make this async and error check this?
     self.template = fs.readFileSync(self.templatePath);
+
     // Remark: If we have been passed in a template as a string,
     // the querySelectorAll context needs to be updated
     self.$ = self.querySelector = query(self.template);
@@ -82,14 +77,6 @@ View.prototype.load = function (viewPath, cb) {
     self.presenter = require(self.presenterPath);
   }
 
-  if(typeof viewPath === "string") {
-    self.viewPath = viewPath;
-  }
-
-  if (typeof cb !== 'function') {
-    throw new Error("callback is required");
-  }
-
   if (self.viewPath) {
     return self.loadViewPath(cb);
   } else {
@@ -98,13 +85,13 @@ View.prototype.load = function (viewPath, cb) {
 };
 
 View.prototype.getSubView = function(viewPath) {
-  // synchronously get subview given path
+  // synchronously get subview from given path
 
   var _view = this,
       parts = viewPath.split('/');
 
   // goes as deep as possible, doesn't error if nothing deeper exist
-  // TODO make it error or do something useful
+  // TODO make it so it tells you how far it went wrt how far it wanted to go
   parts.forEach(function(part) {
     if(part.length > 0 && typeof _view !== 'undefined') {
       _view = _view[part];
@@ -124,9 +111,8 @@ View.prototype.loadViewPath = function (callback) {
     var walker = walk.walk(self.viewPath, {});
 
     walker.on("directory", function(root, dirStats, next) {
-      //console.log(root, dirStats);
       //
-      // create a new subview
+      // create a new directory subview
       //
       var rootSub = path.relative(self.viewPath, root),
           _view = self.getSubView(rootSub),
@@ -142,64 +128,58 @@ View.prototype.loadViewPath = function (callback) {
     });
 
     walker.on("file", function(root, fileStats, next) {
-      //console.log(root, fileStats);
-      //
-      // create a new subview
-      //
+
       var rootSub = path.relative(self.viewPath, root),
-          _view = self.getSubView(rootSub),
-          name = fileStats.name,
-          ext = path.extname(name),
-          subViewName = name.replace(ext, '');
+          fileName = fileStats.name,
+          filePath = root + "/" + fileName,
+          ext = path.extname(fileName),
+          subViewName = fileName.replace(ext, ''),
+          subView,
+          subViewResult;
 
-      // determine if file is template or presenter ( presenters end in .js and are node modules )
-      if (ext === ".js") {
-        next();
-        // don't do anything
-      } else {
+      //
+      // get subview of current path
+      //
+      subViewResult = self.getSubView(rootSub);
+      switch (subViewResult.subsLeft.length) {
 
-        //
-        // load the file as the current template
-        //
-        fs.readFile(root + '/' + name, function(err, result) {
-          if (err) {
-            throw err;
-          }
-          result = result.toString();
-          var presenter, template;
-          //
-          // determine if file is template or presenter
-          //
-          template = result;
+        case 0: // subview already was returned, use it
+          subView = subViewResult.subView;
+          break;
 
-          //
-          // get presenter, if it exists
-          //
-          var presenterPath = root +  '/' + name.replace(ext, '.js');
-
-          //
-          // Determine if presenter file exists first before attempting to require it
-          //
-          // TODO: replace with async stat
-          var exists = false;
-          try {
-            var stat = fs.statSync(presenterPath);
-            exists = true;
-          } catch (err) {
-            exists = false;
-          }
-
-          if (exists) {
-            presenterPath = presenterPath.replace('.js', '');
-            presenter = require(presenterPath);
-          }
-
-          _view[subViewName] = new View({
+        case 1: // subview parent was returned, make new subview as child
+          subView = subViewResult.subView[subViewName] = new View({
             name: subViewName,
-            template: template,
-            presenter: presenter,
             parent: _view
           });
+          break;
+
+        default: // requested subview is not accessible, so error
+          // TODO: make new class of error
+          return callback(new Error("subview not accessible (parent views do not exist)"));
+      }
+
+      //
+      // add this file to subview
+      //
+      // determine what kind of fiile this is
+      switch (ext) {
+
+      case ".js": // presenter
+        subView.presenterPath = filePath;
+        break;
+
+      case ".html": // template
+        subView.templatePath = filePath;
+        break;
+
+      case ".css": // stylesheet
+        // TODO
+        break;
+
+      default:
+        logger.warn("unknown view file: ", filePath);
+      }
 
           next();
         });
