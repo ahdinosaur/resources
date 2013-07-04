@@ -10,36 +10,47 @@ var View = function (options) {
   var self = this;
 
   options = options || {};
+  self.viewPath = options.path;
 
-  self.viewPath = options.path || "./view";
-
-  if (options.path) {
-    self.viewPath      = options.path;
-    self.templatePath  = self.viewPath + '/';
-    self.presenterPath = self.viewPath + '/';
-  }
-
+  // set this view's name
   if (options.name) {
     self.name = options.name;
   } else {
     self.name = "";
   }
 
+  // load in the provided parent
+  if (options.parent) {
+    self.parent = options.parent;
+  }
+
+  //
+  // template stuff
+  //
+  // if template path but no template, load template from path
+  if (options.templatePath) {
+    self.templatePath = options.templatePath;
+  }
+
+  // load in the provided template
   if (options.template) {
     self.template = options.template;
-    //
     // Remark: If we have been passed in a template as a string,
     // the querySelectorAll context needs to be updated
-    //
     self.$ = self.querySelector = query(self.template);
   }
 
-  if (options.presenter) {
-    self.presenter = options.presenter;
+  //
+  // presenter stuff
+  //
+  // if presenter path but no presenter, load presenter from path
+  if (options.presenterPath) {
+    self.presenterPath = options.presenterPath;
   }
 
-  if (options.parent) {
-    self.parent = options.parent;
+  // load in the provided presenter
+  if (options.presenter) {
+    self.presenter = options.presenter;
   }
 
   return self;
@@ -58,18 +69,32 @@ View.prototype.load = function (viewPath, cb) {
     cb = viewPath;
   }
 
+  if (self.templatePath && !self.template) {
+    // TODO: make this async and error check this?
+    self.template = fs.readFileSync(self.templatePath);
+    // Remark: If we have been passed in a template as a string,
+    // the querySelectorAll context needs to be updated
+    self.$ = self.querySelector = query(self.template);
+  }
+
+  if (self.presenterPath && !self.presenter) {
+    // TODO: make this async and error check this?
+    self.presenter = require(self.presenterPath);
+  }
+
   if(typeof viewPath === "string") {
     self.viewPath = viewPath;
   }
-
-  self.templatePath  = self.viewPath + '/';
-  self.presenterPath = self.viewPath + '/';
 
   if (typeof cb !== 'function') {
     throw new Error("callback is required");
   }
 
-  return self._loadAsync(cb);
+  if (self.viewPath) {
+    return self.loadViewPath(cb);
+  } else {
+    return cb(null, self);
+  }
 };
 
 View.prototype.getSubView = function(viewPath) {
@@ -89,7 +114,7 @@ View.prototype.getSubView = function(viewPath) {
   return _view;
 };
 
-View.prototype._loadAsync = function (callback) {
+View.prototype.loadViewPath = function (callback) {
 
   var self = this;
 

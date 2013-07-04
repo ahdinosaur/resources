@@ -15,7 +15,7 @@ module['exports'] = function (options) {
       // helper function for 'quoting' / 'escaping' regex strings
       var quote = function (str) {
         return str.replace(/(?=[\/\\^$*+?.()|{}[\]])/g, "\\");
-      }
+      };
       // clean given prefix of any start or end slashes
       var prefix = options.prefix.replace(/\/$/, "").replace(/^\//, "");
       if (prefix.length > 0 && req.url.search("^/?" + quote(prefix)) === -1) {

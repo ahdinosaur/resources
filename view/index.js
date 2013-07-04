@@ -45,44 +45,9 @@ view.method('create', create, {
 function create (options, callback) {
   options = options || {};
 
-  var view;
+  var _view = new View(options);
 
-  // given template and presenter
-  if (typeof options.template !== 'undefined' &&
-    typeof options.presenter !== 'undefined') {
-    view = new View({
-      template: options.template,
-      presenter: options.presenter
-    });
-
-  // given just template
-  } else if(typeof options.template !== 'undefined') {
-    view = new View({
-      template: options.template
-    });
-
-  // given just presenter
-  } else if(typeof options.presenter !== 'undefined') {
-    view = new View({
-      presenter: options.presenter
-    });
-
-  // given neither template nor presenter
-  } else {
-    view = new View({
-      path: options.path
-    });
-  }
-
-  //
-  // Remark: View should not attempt to load if no path was entered
-  //
-  if (typeof options.path === 'string') {
-    return view.load(callback);
-  }
-
-  return callback(null, view);
-
+  return _view.load(callback);
 }
 
 //

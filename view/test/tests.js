@@ -9,7 +9,6 @@ test("start a view", function (t) {
     t.ok(_view, 'view is returned');
 
     // check default properties
-    t.equal(/.\/view/.test(_view.viewPath), true, "default viewPath is './view'");
     t.equal(_view.name, '', "default name is ''");
     t.equal(_view.template, undefined, "no template is loaded when no path is given");
     t.equal(_view.presenter, undefined, "no presenter is loaded when no path is given");
@@ -19,7 +18,7 @@ test("start a view", function (t) {
 
 test("start a view with a given template", function (t) {
   var _template = '<div class="user">\n\t<div class="name">name</div>\n\t<div class="email">email</div>\n</div>\n';
-  view.create( { template: _template } , function (err, _view) {
+  view.create( { template: _template }, function (err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.present({}, function (err, result) {
@@ -36,7 +35,7 @@ test("start a view with a given template and presenter", function (t) {
   var _presenter = function (options, callback) {
       callback(null, 'hi');
   };
-  view.create( { template: _template, presenter: _presenter } , function (err, _view) {
+  view.create( { template: _template, presenter: _presenter }, function (err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     t.equal(_view.presenter, _presenter, 'view loaded given presenter');
@@ -53,7 +52,7 @@ test("start a view with a given presenter but no template", function (t) {
   var _presenter = function (options, callback) {
       callback(null, 'hi');
   };
-  view.create( { presenter: _presenter } , function (err, _view) {
+  view.create( { presenter: _presenter }, function (err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     t.equal(_view.presenter, _presenter, 'view loaded given presenter');
