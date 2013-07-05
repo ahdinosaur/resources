@@ -23,24 +23,33 @@ module['exports'] = function (options) {
       }
       var _view = options.view;
 
-      // remove prefix and break path into separate parts
+      // get path from url
       var path = require('url').parse(req.url).pathname;
+      // remove prefix from path
       var pathWithoutPrefix = path.replace(prefix, '');
 
+      // get subview corresponding to path, if necessary
       var subViewResult = _view.getSubView(pathWithoutPrefix);
+      // if such a subview does not exist
       if (subViewResult.subsLeft.length !== 0) {
-        next();
-      } else {
+        // pass on to the next in the middleware stack
+        return next();
+      }
+      // or if such a subview does exist, use it
+      else {
         _view = subViewResult.subView;
       }
 
+      // if view has an index, use it
       if (_view && _view['index']) {
         _view = _view['index'];
       }
 
+      // if we don't have a sufficient view
       if(typeof _view === "undefined" ||
         (typeof _view.template === "undefined" &&
         typeof _view.presenter === "undefined")) {
+        // pass on to the next in the middleware stack
         return next();
       }
 
@@ -59,9 +68,12 @@ module['exports'] = function (options) {
             html: html
           }, function(err, result) {
             if (err) { return next(err); }
+            // return result html from layout
             res.end(result);
           });
-        } else {
+        }
+        // or if no layout, return html we have
+        else {
           if (err) { return next(err); }
           res.end(html);
         }
@@ -87,7 +99,7 @@ module['exports'] = function (options) {
       //
       // No view was found, do not use middleware
       //
-      next();
+      return next();
     }
   };
 

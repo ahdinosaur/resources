@@ -75,17 +75,16 @@ function start(options, callback) {
     }, next);
   });
 
+  var next = function (err) {
+    http.app.before('router').use(app).as('forms');
+    return callback(null, app);
+  };
+
   if(!http.app) {
     http.start(options, next);
   }
   else {
     next();
-  }
-
-  function next(err) {
-    console.log("app",http.app);
-    http.app.before('router').use(app).as('forms');
-    return callback(null, app);
   }
 }
 forms.method('start', start, {
