@@ -87,18 +87,31 @@ View.prototype.load = function (cb) {
 View.prototype.getSubView = function(viewPath) {
   // synchronously get subview from given path
 
-  var _view = this,
+  var subView = this,
       parts = viewPath.split('/');
 
   // goes as deep as possible, doesn't error if nothing deeper exist
   // TODO make it so it tells you how far it went wrt how far it wanted to go
-  parts.forEach(function(part) {
-    if(part.length > 0 && typeof _view !== 'undefined') {
-      _view = _view[part];
+  while (true) {
+    if (parts.length === 0) {
+      return {subView: subView, subsLeft: parts};
     }
-  });
 
-  return _view;
+    var part = parts.shift();
+    if (part.length === 0) {
+      continue;
+    }
+    else if (typeof subView !== 'undefined' &&
+      typeof subView[part] !== 'undefined' &&
+      subView[part].name === part) {
+      subView = subView[part];
+      continue;
+    }
+    else {
+      parts.unshift(part);
+      return {subView: subView, subsLeft: parts};
+    }
+  }
 };
 
 View.prototype.loadViewPath = function (callback) {
@@ -114,33 +127,51 @@ View.prototype.loadViewPath = function (callback) {
       //
       // create a new directory subview
       //
-      var rootSub = path.relative(self.viewPath, root),
-          _view = self.getSubView(rootSub),
-          subViewName = dirStats.name;
+      var subRoot = path.relative(self.viewPath, root),
+          subViewName = dirStats.name,
+          subPath = subRoot + "/" + subViewName,
+          subView,
+          subViewResult;
 
-      _view[subViewName] = new View({
-        name: subViewName,
-        path: root,
-        parent: _view
-      });
+      subViewResult = self.getSubView(subPath);
+      switch (subViewResult.subsLeft.length) {
 
-      next();
+        case 0: // subview already was returned, use it
+          // this case should not be reached, error/warn if reached?
+          subView = subViewResult.subView;
+          break;
+
+        case 1: // subview parent was returned, make new subview as child
+          subView = subViewResult.subView[subViewName] = new View({
+            name: subViewName,
+            path: root,
+            parent: subViewResult.subView
+          });
+          break;
+
+        default: // requested subview is not accessible, so error
+          // TODO: make new class of error
+          return callback(new Error("subview not accessible (parent views do not exist)"));
+        }
+
+      return next();
     });
 
     walker.on("file", function(root, fileStats, next) {
 
-      var rootSub = path.relative(self.viewPath, root),
+      var subRoot = path.relative(self.viewPath, root),
           fileName = fileStats.name,
           filePath = root + "/" + fileName,
           ext = path.extname(fileName),
           subViewName = fileName.replace(ext, ''),
+          subPath = subRoot + "/" + subViewName,
           subView,
           subViewResult;
 
       //
       // get subview of current path
       //
-      subViewResult = self.getSubView(rootSub);
+      subViewResult = self.getSubView(subPath);
       switch (subViewResult.subsLeft.length) {
 
         case 0: // subview already was returned, use it
@@ -150,7 +181,7 @@ View.prototype.loadViewPath = function (callback) {
         case 1: // subview parent was returned, make new subview as child
           subView = subViewResult.subView[subViewName] = new View({
             name: subViewName,
-            parent: _view
+            parent: subViewResult.subView
           });
           break;
 
@@ -162,28 +193,31 @@ View.prototype.loadViewPath = function (callback) {
       //
       // add this file to subview
       //
-      // determine what kind of fiile this is
+      // determine what kind of file this is
       switch (ext) {
 
-      case ".js": // presenter
-        subView.presenterPath = filePath;
-        break;
+        case ".js": // presenter
+          subView.presenterPath = filePath;
+          break;
 
-      case ".html": // template
-        subView.templatePath = filePath;
-        break;
+        case ".html": // template
+          subView.templatePath = filePath;
+          break;
 
-      case ".css": // stylesheet
-        // TODO
-        break;
+        case ".css": // stylesheet
+          // TODO
+          break;
 
-      default:
-        logger.warn("unknown view file: ", filePath);
+        default:
+          logger.warn("unknown view file: ", filePath);
       }
 
-          next();
-        });
-      }
+      subView.load(function(err) {
+        // TODO can we async return error?
+        // https://github.com/coolaj86/node-walk/issues/12
+        if (err) { return callback(err); }
+        return next();
+      });
     });
 
     walker.on('end', function() {

@@ -27,7 +27,12 @@ module['exports'] = function (options) {
       var path = require('url').parse(req.url).pathname;
       var pathWithoutPrefix = path.replace(prefix, '');
 
-      _view = _view.getSubView(pathWithoutPrefix);
+      var subViewResult = _view.getSubView(pathWithoutPrefix);
+      if (subViewResult.subsLeft.length !== 0) {
+        next();
+      } else {
+        _view = subViewResult.subView;
+      }
 
       if (_view && _view['index']) {
         _view = _view['index'];

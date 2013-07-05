@@ -125,7 +125,7 @@ test("start view from given templatePath and presenterPath containing single tem
   }, function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
-    _view.index.present({}, function (err, result) {
+    _view.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
