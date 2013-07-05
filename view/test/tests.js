@@ -66,7 +66,7 @@ test("start a view with a given presenter but no template", function (t) {
   });
 });
 
-test("start view from single template at given path", function (t) {
+test("start view from single template at given viewPath", function (t) {
   var viewPath = __dirname + "/view1";
   view.create( { path: viewPath } , function(err, _view) {
     t.ok(!err, 'no error');
@@ -103,7 +103,7 @@ test("start view from single template at given path", function (t) {
 //  });
 //});
 
-test("start view from given path containing single template and presenter", function (t) {
+test("start view from given viewPath containing single template and presenter", function (t) {
   view.create( { path: __dirname + "/view2" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
@@ -117,6 +117,41 @@ test("start view from given path containing single template and presenter", func
     });
   });
 });
+
+test("start view from given templatePath and presenterPath containing single template and presenter", function (t) {
+  view.create( {
+    templatePath: __dirname + "/view22/index.html",
+    presenterPath: __dirname + "/view22/index.js"
+  }, function(err, _view) {
+    t.ok(!err, 'no error');
+    t.ok(_view, 'view is returned');
+    _view.index.present({}, function (err, result) {
+      t.ok(!err, 'no error');
+      t.ok(result, 'present returns result');
+      t.equal(result,
+        '<div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n',
+        'present() returns correct result');
+      t.end();
+    });
+  });
+});
+
+// TODO: should this maybe test that presenters with no html get the template, but
+//       presenters with template get their template?
+//test("start view from given viewPath and template", function (t) {
+//  view.create( { path: __dirname + "/view23" } , function(err, _view) {
+//    t.ok(!err, 'no error');
+//    t.ok(_view, 'view is returned');
+//    _view.index.present({}, function (err, result) {
+//      t.ok(!err, 'no error');
+//      t.ok(result, 'present returns result');
+//      t.equal(result,
+//        '<div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n',
+//        'present() returns correct result');
+//      t.end();
+//    });
+//  });
+//});
 
 test("start view from given path containing single template and presenter with function call to a specific layout", function (t) {
   view.create( { path: __dirname + "/view21" } , function(err, _view) {
@@ -133,7 +168,7 @@ test("start view from given path containing single template and presenter with f
   });
 });
 
-test("start view from given path containing single template and presenter with layout template", function (t) {
+test("start view from given viewPath containing single template and presenter with layout template", function (t) {
   view.create( { path: __dirname + "/view3" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
@@ -162,7 +197,7 @@ test("start view from given path containing single template and presenter with l
 //  });
 //});
 
-test("start from view given path containing single template and presenter with layout template and presenter", function (t) {
+test("start from view given viewPath containing single template and presenter with layout template and presenter", function (t) {
   view.create( { path: __dirname + "/view5" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
@@ -356,6 +391,3 @@ test("flat and nested views return error when layout is called with no layout", 
     });
   });
 });
-
-
-// TODO: make tests for giving presenter and template paths for view create
