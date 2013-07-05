@@ -84,24 +84,23 @@ test("start view from single template at given viewPath", function (t) {
   });
 });
 
-// TODO: should this use case (js but no html) be supported?
-//test("start view from single presenter at given path", function (t) {
-//  var viewPath = __dirname + "/view20";
-//  view.create( { path: viewPath } , function(err, _view) {
-//    t.ok(!err, 'no error');
-//    t.ok(_view, 'view is returned');
-//    t.equal(_view.viewPath, viewPath,
-//      'viewPath was correctly set to path: ' + viewPath);
-//    _view.index.present({}, function (err, result) {
-//      t.ok(!err, 'no error');
-//      t.ok(result, 'present returns result');
-//      t.equal(result,
-//        '<div class="user">\n\t<div class="name">name</div>\n\t<div class="email">email</div>\n</div>\n',
-//        'present() returns correct result');
-//      t.end();
-//    });
-//  });
-//});
+test("start view from single presenter at given path", function (t) {
+  var viewPath = __dirname + "/view20";
+  view.create( { path: viewPath } , function(err, _view) {
+    t.ok(!err, 'no error');
+    t.ok(_view, 'view is returned');
+    t.equal(_view.viewPath, viewPath,
+      'viewPath was correctly set to path: ' + viewPath);
+    _view.index.present({}, function (err, result) {
+      t.ok(!err, 'no error');
+      t.ok(result, 'present returns result');
+      t.equal(result,
+        'hi!',
+        'present() returns correct result');
+      t.end();
+    });
+  });
+});
 
 test("start view from given viewPath containing single template and presenter", function (t) {
   view.create( { path: __dirname + "/view2" } , function(err, _view) {
