@@ -182,19 +182,18 @@ test("start view from given viewPath containing single template and presenter wi
   });
 });
 
-// TODO: should this use case (layout presenter but no template) be supported?
-//test("start view from given path containing single template and presenter with layout presenter", function (t) {
-//  view.create( { path: __dirname + "/view4" } , function(err, _view) {
-//    t.ok(!err, 'no error');
-//    t.ok(_view, 'view is returned');
-//    _view.index.present({}, function (err, result) {
-//      t.ok(!err, 'no error');
-//      t.ok(result, 'present returns result');
-//      t.equal(result,'<div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n');
-//      t.end();
-//    });
-//  });
-//});
+test("start view from given path containing single template and presenter with layout presenter", function (t) {
+  view.create( { path: __dirname + "/view4" } , function(err, _view) {
+    t.ok(!err, 'no error');
+    t.ok(_view, 'view is returned');
+    _view.index.present({}, function (err, result) {
+      t.ok(!err, 'no error');
+      t.ok(result, 'present returns result');
+      t.equal(result,'<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>');
+      t.end();
+    });
+  });
+});
 
 test("start from view given viewPath containing single template and presenter with layout template and presenter", function (t) {
   view.create( { path: __dirname + "/view5" } , function(err, _view) {
