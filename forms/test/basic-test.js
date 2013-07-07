@@ -5,6 +5,7 @@ var wd = require('wd')
   , forms = resource.use('forms')
   , creature = resource.use('creature')
   , _creature
+  , frank
   , server
   , browser = wd.remote();
 
@@ -92,6 +93,7 @@ var baseUrl = "http://localhost:8888";
 tap.test("get / with no creatures", function (t) {
 
   browser.get(baseUrl, function (err, html) {
+    t.ok(!err, 'no error');
     browser.title(function(err, title) {
       t.equal(title, 'big forms test', 'title is correct');
       browser.elementByCssSelector('.result', function(err, result) {
@@ -106,12 +108,13 @@ tap.test("get / with no creatures", function (t) {
   });
 });
 
-tap.test("create a creature", function (t) {
+tap.test("create a creature with default properties", function (t) {
 
   browser.get(baseUrl + "/creature/create", function (err, html) {
+    t.ok(!err, 'no error');
     browser.elementByCssSelector('form', function(err, form) {
       t.ok(!err, 'no error');
-      browser.submit(form, function() {
+      browser.submit(form, function(err) {
         t.ok(!err, 'no error');
         browser.elementByCssSelector('.result', function(err, result) {
           t.ok(!err, 'no error');
@@ -136,9 +139,11 @@ tap.test("create a creature", function (t) {
 });
 
 
-tap.test("get /creature/all", function (t) {
+
+tap.test("get / with a creature", function (t) {
 
   browser.get(baseUrl, function (err, result) {
+    t.ok(!err, 'no error');
     browser.title(function(err, title) {
       browser.elementByClassName('result', function(err, result) {
         t.ok(!err, 'no error');
@@ -152,7 +157,265 @@ tap.test("get /creature/all", function (t) {
   });
 });
 
+
+tap.test("create a creature with specified properties", function (t) {
+
+  browser.get(baseUrl + "/creature/create", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('id', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type("frank", function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('form', function(err, form) {
+          t.ok(!err, 'no error');
+          browser.submit(form, function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('.result', function(err, result) {
+              t.ok(!err, 'no error');
+              browser.text(result, function(err, resultText) {
+                t.ok(!err, 'no error');
+                frank = JSON.parse(resultText);
+                t.equal(frank.id,
+                  "frank",
+                  "created creature has id frank");
+                t.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+// TODO fix get
 /*
+tap.test("get frank by id", function (t) {
+
+  browser.get(baseUrl + "/creature/get", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('id', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type("frank", function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('form', function(err, form) {
+          t.ok(!err, 'no error');
+          browser.submit(form, function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('.result', function(err, result) {
+              t.ok(!err, 'no error');
+              browser.text(result, function(err, resultText) {
+                t.ok(!err, 'no error');
+                t.ok(deepEqual(frank, JSON.parse(resultText)), "got frank");
+                t.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});*/
+
+tap.test("find both creatures with empty form", function (t) {
+
+  browser.get(baseUrl + "/creature/find", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementByCssSelector('form', function(err, form) {
+      t.ok(!err, 'no error');
+      browser.submit(form, function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('.result', function(err, result) {
+          t.ok(!err, 'no error');
+          browser.text(result, function(err, resultText) {
+            t.ok(!err, 'no error');
+            t.ok(deepEqual([_creature,frank], JSON.parse(resultText)), "created creatures are in find");
+            t.end();
+          });
+        });
+      });
+    });
+  });
+});
+
+tap.test("find both creatures by type", function (t) {
+
+  browser.get(baseUrl + "/creature/find", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('type', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type("dragon", function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('form', function(err, form) {
+          t.ok(!err, 'no error');
+          browser.submit(form, function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('.result', function(err, result) {
+              t.ok(!err, 'no error');
+              browser.text(result, function(err, resultText) {
+                t.ok(!err, 'no error');
+                t.ok(deepEqual([_creature,frank], JSON.parse(resultText)), "found both creatures by type");
+                t.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+tap.test("find frank by id", function (t) {
+
+  browser.get(baseUrl + "/creature/find", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('id', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type("frank", function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('form', function(err, form) {
+          t.ok(!err, 'no error');
+          browser.submit(form, function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('.result', function(err, result) {
+              t.ok(!err, 'no error');
+              browser.text(result, function(err, resultText) {
+                t.ok(!err, 'no error');
+                t.ok(deepEqual([frank], JSON.parse(resultText)), "found frank by id");
+                t.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+tap.test("update frank's life by id", function (t) {
+
+  browser.get(baseUrl + "/creature/update", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('id', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type('frank', function(err) {
+        t.ok(!err, 'no error');
+        browser.elementById('life', function(err, result) {
+          t.ok(!err, 'no error');
+          result.type('\uE003\uE00369', function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('form', function(err, form) {
+              t.ok(!err, 'no error');
+              browser.submit(form, function(err) {
+                t.ok(!err, 'no error');
+                browser.elementByCssSelector('.result', function(err, result) {
+                  t.ok(!err, 'no error');
+                  browser.text(result, function(err, resultText) {
+                    t.ok(!err, 'no error');
+                    frank = JSON.parse(resultText);
+                    t.equal(frank.life, 69,
+                      "updated frank's life to 69 by id");
+                    t.end();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+tap.test("find frank by updated life", function (t) {
+
+  browser.get(baseUrl + "/creature/find", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('life', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type("69", function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('form', function(err, form) {
+          t.ok(!err, 'no error');
+          browser.submit(form, function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('.result', function(err, result) {
+              t.ok(!err, 'no error');
+              browser.text(result, function(err, resultText) {
+                t.ok(!err, 'no error');
+                t.ok(deepEqual([frank], JSON.parse(resultText)), "found frank by updated life");
+                t.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+
+
+
+
+/*
+// TODO: make destroy work
+tap.test("destroy frank by id", function (t) {
+
+  browser.get(baseUrl + "/creature/destroy", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('id', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type("frank", function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('form', function(err, form) {
+          t.ok(!err, 'no error');
+          browser.submit(form, function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('.result', function(err, result) {
+              t.ok(!err, 'no error');
+              browser.text(result, function(err, resultText) {
+                t.ok(!err, 'no error');
+                console.log(resultText);
+                //t.ok(deepEqual([frank], JSON.parse(resultText)), "destroyed frank by id");
+                t.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+// TODO: make this work once destroy and get work
+tap.test("get frank by id fails since frank is dead", function (t) {
+
+  browser.get(baseUrl + "/creature/get", function (err, html) {
+    t.ok(!err, 'no error');
+    browser.elementById('id', function(err, result) {
+      t.ok(!err, 'no error');
+      result.type("frank", function(err) {
+        t.ok(!err, 'no error');
+        browser.elementByCssSelector('form', function(err, form) {
+          t.ok(!err, 'no error');
+          browser.submit(form, function(err) {
+            t.ok(!err, 'no error');
+            browser.elementByCssSelector('.result', function(err, result) {
+              t.ok(!err, 'no error');
+              browser.text(result, function(err, resultText) {
+                t.ok(!err, 'no error');
+                //t.ok(deepEqual(frank, JSON.parse(resultText)), "frank is dead");
+                t.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
 tap.test('clean up and shut down browser', function (t) {
   browser.quit();
   t.end();
