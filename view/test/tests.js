@@ -17,7 +17,7 @@ test("start a view", function (t) {
 });
 
 test("start a view with a given template", function (t) {
-  var _template = '<div class="user">\n\t<div class="name">name</div>\n\t<div class="email">email</div>\n</div>\n';
+  var _template = '<div class="user">\n  <div class="name">name</div>\n  <div class="email">email</div>\n</div>\n';
   view.create( { template: _template }, function (err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
@@ -31,7 +31,7 @@ test("start a view with a given template", function (t) {
 });
 
 test("start a view with a given template and presenter", function (t) {
-  var _template = '<div class="user">\n\t<div class="name">name</div>\n\t<div class="email">email</div>\n</div>\n';
+  var _template = '<div class="user">\n  <div class="name">name</div>\n  <div class="email">email</div>\n</div>\n';
   var _presenter = function (options, callback) {
       callback(null, 'hi');
   };
@@ -67,7 +67,7 @@ test("start a view with a given presenter but no template", function (t) {
 });
 
 test("start view from single template at given viewPath", function (t) {
-  var viewPath = __dirname + "/view1";
+  var viewPath = __dirname + "/single-template";
   view.create( { path: viewPath } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
@@ -77,7 +77,7 @@ test("start view from single template at given viewPath", function (t) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<div class="user">\n\t<div class="name">name</div>\n\t<div class="email">email</div>\n</div>\n',
+        '<div class="user">\n  <div class="name">name</div>\n  <div class="email">email</div>\n</div>\n',
         'present() returns correct result');
       t.end();
     });
@@ -85,7 +85,7 @@ test("start view from single template at given viewPath", function (t) {
 });
 
 test("start view from single presenter at given path", function (t) {
-  var viewPath = __dirname + "/view20";
+  var viewPath = __dirname + "/single-presenter";
   view.create( { path: viewPath } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
@@ -103,14 +103,14 @@ test("start view from single presenter at given path", function (t) {
 });
 
 test("start view from given viewPath containing single template and presenter", function (t) {
-  view.create( { path: __dirname + "/view2" } , function(err, _view) {
+  view.create( { path: __dirname + "/single-template-presenter" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n',
+        '<div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n',
         'present() returns correct result');
       t.end();
     });
@@ -119,8 +119,8 @@ test("start view from given viewPath containing single template and presenter", 
 
 test("start view from given templatePath and presenterPath containing single template and presenter", function (t) {
   view.create( {
-    templatePath: __dirname + "/view22/index.html",
-    presenterPath: __dirname + "/view22/index.js"
+    templatePath: __dirname + "/single-template-presenter/index.html",
+    presenterPath: __dirname + "/single-template-presenter/index.js"
   }, function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
@@ -128,7 +128,7 @@ test("start view from given templatePath and presenterPath containing single tem
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n',
+        '<div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n',
         'present() returns correct result');
       t.end();
     });
@@ -145,37 +145,22 @@ test("start view from given templatePath and presenterPath containing single tem
 //      t.ok(!err, 'no error');
 //      t.ok(result, 'present returns result');
 //      t.equal(result,
-//        '<div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n',
+//        '<div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n',
 //        'present() returns correct result');
 //      t.end();
 //    });
 //  });
 //});
 
-test("start view from given path containing single template and presenter with function call to a specific layout", function (t) {
-  view.create( { path: __dirname + "/view21" } , function(err, _view) {
-    t.ok(!err, 'no error');
-    t.ok(_view, 'view is returned');
-    _view.index.present({}, function (err, result) {
-      t.ok(!err, 'no error');
-      t.ok(result, 'present returns result');
-      t.equal(result,
-        '<h1>nothing</h1>\n<div id="test"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
-        'present() returns correct result');
-      t.end();
-    });
-  });
-});
-
 test("start view from given viewPath containing single template and presenter with layout template", function (t) {
-  view.create( { path: __dirname + "/view3" } , function(err, _view) {
+  view.create( { path: __dirname + "/layout-template" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<h1>nothing</h1>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
+        '<h1>nothing</h1>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>',
         'present() returns correct result');
       t.end();
     });
@@ -183,57 +168,27 @@ test("start view from given viewPath containing single template and presenter wi
 });
 
 test("start view from given path containing single template and presenter with layout presenter", function (t) {
-  view.create( { path: __dirname + "/view4" } , function(err, _view) {
+  view.create( { path: __dirname + "/layout-presenter" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
-      t.equal(result,'<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>');
+      t.equal(result,'<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>');
       t.end();
     });
   });
 });
 
 test("start from view given viewPath containing single template and presenter with layout template and presenter", function (t) {
-  view.create( { path: __dirname + "/view5" } , function(err, _view) {
+  view.create( { path: __dirname + "/layout-template-presenter" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<h1>big</h1>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
-        'present() returns correct result');
-      t.end();
-    });
-  });
-});
-
-test("layout presenter should run before template presenter", function (t) {
-  view.create( { path: __dirname + "/view7" } , function(err, _view) {
-    t.ok(!err, 'no error');
-    t.ok(_view, 'view is returned');
-    _view.index.present({}, function (err, result) {
-      t.ok(!err, 'no error');
-      t.ok(result, 'present returns result');
-      t.equal(result,
-        '<h1>big</h1>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
-        'present() returns correct result');
-      t.end();
-    });
-  });
-});
-
-test("template presenter should be able to modify layout html", function (t) {
-  view.create( { path: __dirname + "/view10" } , function(err, _view) {
-    t.ok(!err, 'no error');
-    t.ok(_view, 'view is returned');
-    _view.index.present({}, function (err, result) {
-      t.ok(!err, 'no error');
-      t.ok(result, 'present returns result');
-      t.equal(result,
-        '<h1>big</h1><div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
+        '<h1>big</h1>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>',
         'present() returns correct result');
       t.end();
     });
@@ -241,14 +196,14 @@ test("template presenter should be able to modify layout html", function (t) {
 });
 
 test("multiple views with a layout and presenter", function (t) {
-  view.create( { path: __dirname + "/view11" } , function(err, _view) {
+  view.create( { path: __dirname + "/multi-view" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<h1>big</h1>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>\n',
+        '<h1>big</h1>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>\n',
         'present() returns correct result');
     });
     _view.table.present({}, function (err, result) {
@@ -263,18 +218,20 @@ test("multiple views with a layout and presenter", function (t) {
 });
 
 test("layout presenter and template presenter both see passed options", function (t) {
-  view.create( { path: __dirname + "/view12" } , function(err, _view) {
+  view.create( { path: __dirname + "/layout-options" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({
-      name: "Bob",
-      email: "bob@bob.com",
-      company: "big"
+      data: {
+        name: "Bob",
+        email: "bob@bob.com",
+        company: "big"
+      }
     }, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<h1>big</h1>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
+        '<h1>big</h1>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>',
         'present() returns correct result');
       t.end();
     });
@@ -282,23 +239,27 @@ test("layout presenter and template presenter both see passed options", function
 });
 
 test("multiple views with a layout and presenter, as well as options", function (t) {
-  view.create( { path: __dirname + "/view13" } , function(err, _view) {
+  view.create( { path: __dirname + "/multi-view-options" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({
-      name: "Bob",
-      email: "bob@bob.com",
-      company: "big"
+      data: {
+        name: "Bob",
+        email: "bob@bob.com",
+        company: "big"
+      }
     }, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<h1>big</h1>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
+        '<h1>big</h1>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>',
         'present() returns correct result');
     });
     _view.table.present({
-      table: "steve",
-      company: "company"
+      data: {
+        name: "steve",
+        company: "company"
+      }
     }, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
@@ -311,14 +272,14 @@ test("multiple views with a layout and presenter, as well as options", function 
 });
 
 test("nested views, no layouts", function(t) {
-  view.create( { path: __dirname + "/view15" } , function(err, _view) {
+  view.create( { path: __dirname + "/subviews" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n',
+        '<div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n',
         'present() returns correct result');
     });
     _view.test.table.present({}, function (err, result) {
@@ -333,14 +294,14 @@ test("nested views, no layouts", function(t) {
 });
 
 test("nested views, nested layouts affect only appropriate directory level", function(t) {
-  view.create( { path: __dirname + "/view16" } , function(err, _view) {
+  view.create( { path: __dirname + "/multi-layout" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<h1>big</h1>\n<h2>nothing</h2>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
+        '<h1>big</h1>\n<h2>nothing</h2>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>',
         'present() returns correct result');
     });
     _view.test.table.present({}, function (err, result) {
@@ -355,14 +316,14 @@ test("nested views, nested layouts affect only appropriate directory level", fun
 });
 
 test("nested views traverse upward to find parent layout", function(t) {
-  view.create( { path: __dirname + "/view6" } , function(err, _view) {
+  view.create( { path: __dirname + "/layout-subviews" } , function(err, _view) {
     t.ok(!err, 'no error');
     t.ok(_view, 'view is returned');
     _view.index.present({}, function (err, result) {
       t.ok(!err, 'no error');
       t.ok(result, 'present returns result');
       t.equal(result,
-        '<h1>big</h1>\n<h2>nothing</h2>\n<div id="main"><div class="user">\n\t<div class="name">Bob</div>\n\t<div class="email">bob@bob.com</div>\n</div>\n</div>',
+        '<h1>big</h1>\n<h2>nothing</h2>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>',
         'present() returns correct result');
     });
     _view.test.table.present({}, function (err, result) {
@@ -376,16 +337,3 @@ test("nested views traverse upward to find parent layout", function(t) {
   });
 });
 
-test("flat and nested views return error when layout is called with no layout", function(t) {
-  view.create( { path: __dirname + "/view8" } , function(err, _view) {
-    t.ok(!err, 'no error');
-    t.ok(_view, 'view is returned');
-    _view.index.present({}, function (err, result) {
-      t.ok(err instanceof view.errors.LayoutNotFoundError, 'error when trying to load a layout and none exists');
-    });
-    _view.test.table.present({}, function (err, result) {
-      t.ok(err instanceof view.errors.LayoutNotFoundError, 'error when trying to load a layout and none exists');
-      t.end();
-    });
-  });
-});
