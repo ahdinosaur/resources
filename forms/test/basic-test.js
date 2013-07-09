@@ -188,7 +188,6 @@ tap.test("create a creature with specified properties", function (t) {
   });
 });
 
-// TODO fix get
 tap.test("get frank by id", function (t) {
 
   browser.get(baseUrl + "/creature/get", function (err, html) {
