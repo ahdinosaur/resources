@@ -195,6 +195,21 @@ test("start from view given viewPath containing single template and presenter wi
   });
 });
 
+test("start from view given viewPath containing single template and presenter with layout template and presenter", function (t) {
+  view.create( { path: __dirname + "/layout-sugar" } , function(err, _view) {
+    t.ok(!err, 'no error');
+    t.ok(_view, 'view is returned');
+    _view.index.present({}, function (err, result) {
+      t.ok(!err, 'no error');
+      t.ok(result, 'present returns result');
+      t.equal(result,
+        '<h1>big</h1>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div>',
+        'present() returns correct result');
+      t.end();
+    });
+  });
+});
+
 test("multiple views with a layout and presenter", function (t) {
   view.create( { path: __dirname + "/multi-view" } , function(err, _view) {
     t.ok(!err, 'no error');
