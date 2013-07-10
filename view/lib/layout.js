@@ -5,7 +5,9 @@ module['exports'] = function (layout, options, callback) {
   options = options || {};
 
   var self = this,
-      logger = resource.use('logger');
+      logger = resource.use('logger'),
+      selector = options.selector,
+      html = self.$.html();
 
   //
   // if options.layout does not exist, traverse upwards and return the first found
@@ -28,7 +30,7 @@ module['exports'] = function (layout, options, callback) {
 
     // place given html into selection
     // if not provided, default selector to #main
-    $(options.selector || '#main').html(self.$.html());
+    $(selector || '#main').html(html);
     // return the rendered dom
     callback(null, $.html());
   });

@@ -19,12 +19,8 @@ module['exports'] = function (options, callback) {
     r.get(options.id, function(err, _r) {
       if (err) {
         options.err = err;
-        return self.layout({
-          layout: self.parent.parent.layout,
-          layoutOptions: options,
-          selector: "#forms-main",
-          html: ""
-        }, callback);
+        options.selector = "#forms-main";
+        return self.layout(self.parent.parent.layout, options, callback);
       }
 
       // use current instance to default options.data

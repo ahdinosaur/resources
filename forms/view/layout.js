@@ -47,11 +47,8 @@ module['exports'] = function (options, callback) {
   });
 
   if (resource.layout) {
-    return self.layout({
-      layout: resource.layout.view,
-      layoutOptions: options,
-      html: $.html()
-    }, callback);
+    options.selector = '#main';
+    self.layout(resource.layout.view, options, callback);
   } else {
     return callback(options.error, $.html());
   }

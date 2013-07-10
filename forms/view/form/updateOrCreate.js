@@ -23,12 +23,8 @@ module['exports'] = function (options, callback) {
       }
       else if (err) {
         options.err = err;
-        return self.layout({
-          layout: self.parent.parent.layout,
-          layoutOptions: options,
-          selector: "#forms-main",
-          html: ""
-        }, callback);
+        options.selector = "#forms-main";
+        return self.layout(self.parent.parent.layout, options, callback);
       }
       else {
         // use current instance to default options.data
