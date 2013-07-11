@@ -20,13 +20,13 @@ var View = function (options) {
     self.name = "";
   }
 
-  // load in the provided parent
+  // set the provided parent
   if (options.parent) {
     self.parent = options.parent;
   }
 
   //
-  // template stuff
+  // set template
   //
   // if template path but no template, load template from path
   if (options.templatePath) {
@@ -36,13 +36,10 @@ var View = function (options) {
   // load in the provided template
   if (options.template) {
     self.template = options.template;
-    // Remark: If we have been passed in a template as a string,
-    // the querySelectorAll context needs to be updated
-    self.$ = self.querySelector = query(self.template);
   }
 
   //
-  // presenter stuff
+  // set presenter
   //
   // if presenter path but no presenter, load presenter from path
   if (options.presenterPath) {
@@ -58,19 +55,15 @@ var View = function (options) {
 };
 
 //
-// Loads a template file or directory by path
+// loads a View
 //
-View.prototype.load = function (cb) {
+View.prototype.load = function (callback) {
   var self = this;
 
-  if (self.templatePath && !self.template) {
-    // TODO: make this async and error check this?
-    self.template = fs.readFileSync(self.templatePath);
+  // TODO make these async?
+  // TODO error handling
 
-    // Remark: If we have been passed in a template as a string,
-    // the querySelectorAll context needs to be updated
-    self.$ = self.querySelector = query(self.template);
-  }
+  self.loadTemplate(self);
 
   if (self.presenterPath && !self.presenter) {
     // TODO: make this async and error check this?
@@ -78,10 +71,41 @@ View.prototype.load = function (cb) {
   }
 
   if (self.viewPath) {
-    return self.loadViewPath(cb);
+    return self.loadViewPath(callback);
   } else {
-    return cb(null, self);
+    return callback(null, self);
   }
+};
+
+//
+// loads a View template
+//
+View.prototype.loadTemplate = function (options) {
+
+  var self = this;
+
+  if (options.template) {
+    // use given template
+    self.template = options.template;
+  } else if (options.templatePath) {
+    // load template from file
+    // TODO: error handling
+    self.template = fs.readFileSync(options.templatePath);
+
+    // based on the template file extension,
+    var templateLang = path.extname(options.templatePath);
+    // use the corresponding template resource, if exists
+    if (resource.resources[templateLang]) {
+      // save the render fn in the View
+      self.render = resource.use(templateLang).render;
+    }
+  }
+
+  // update the querySelector context
+  self.$ = self.querySelector = query(self.template);
+
+  // return template
+  return self;
 };
 
 View.prototype.getSubView = function(viewPath) {
@@ -234,14 +258,15 @@ View.prototype.layout = require('./layout');
 
 View.prototype.present = function(options, callback) {
 
-  // TODO: turn self into this
-  // load query into self
-  var self = this;
-  self.$ = self.querySelector = query(self.template);
+  // freshly load template
+  if (this.template) {
+    this.loadTemplate(this.template);
+  }
 
   // if we have presenter, use it,
-  // otherwise fallback to default presenter
-  return (self.presenter || render).call(self, options, callback);
+  // otherwise fallback to template render,
+  // otherwise fallback to default render.
+  return (this.presenter || this.render || render).call(this, options, callback);
 };
 
 //
