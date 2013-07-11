@@ -6,7 +6,7 @@ module['exports'] = function (options, callback) {
 
   // all never needs additional data and always posts
   options.action = 'post';
-  options.data = undefined;
+  options.data = {};
 
   // call method view
   this.parent.method.present(options, callback);

@@ -4,8 +4,7 @@ var wd = require('wd')
   , view = resource.use('view')
   , forms = resource.use('forms')
   , creature = resource.use('creature')
-  , _creature
-  , frank
+  , creatures = {}
   , server
   , browser = wd.remote();
 
@@ -120,14 +119,14 @@ tap.test("create a creature with default properties", function (t) {
           t.ok(!err, 'no error');
           browser.text(result, function(err, resultText) {
             t.ok(!err, 'no error');
-            _creature = JSON.parse(resultText);
-            t.equal(_creature.type,
+            creatures['default'] = JSON.parse(resultText);
+            t.equal(creatures['default'].type,
               creature.schema.properties.type.default,
               "created creature has default type");
-            t.equal(_creature.life,
+            t.equal(creatures['default'].life,
               creature.schema.properties.life.default,
               "created creature has default life");
-            t.equal(_creature.isAwesome,
+            t.equal(creatures['default'].isAwesome,
               creature.schema.properties.isAwesome.default,
               "created creature has default awesomeness");
             t.end();
@@ -149,7 +148,7 @@ tap.test("get / with a creature", function (t) {
         t.ok(!err, 'no error');
         browser.text(result, function(err, resultText) {
           t.ok(!err, 'no error');
-          t.ok(deepEqual([_creature], JSON.parse(resultText)), "created creature is in all");
+          t.ok(deepEqual([creatures['default']], JSON.parse(resultText)), "created creature is in all");
           t.end();
         });
       });
@@ -174,8 +173,8 @@ tap.test("create a creature with specified properties", function (t) {
               t.ok(!err, 'no error');
               browser.text(result, function(err, resultText) {
                 t.ok(!err, 'no error');
-                frank = JSON.parse(resultText);
-                t.equal(frank.id,
+                creatures['frank'] = JSON.parse(resultText);
+                t.equal(creatures['frank'].id,
                   "frank",
                   "created creature has id frank");
                 t.end();
@@ -189,7 +188,7 @@ tap.test("create a creature with specified properties", function (t) {
 });
 
 // TODO fix get
-/*
+
 tap.test("get frank by id", function (t) {
 
   browser.get(baseUrl + "/creature/get", function (err, html) {
@@ -206,7 +205,7 @@ tap.test("get frank by id", function (t) {
               t.ok(!err, 'no error');
               browser.text(result, function(err, resultText) {
                 t.ok(!err, 'no error');
-                t.ok(deepEqual(frank, JSON.parse(resultText)), "got frank");
+                t.ok(deepEqual(creatures['frank'], JSON.parse(resultText)), "got frank");
                 t.end();
               });
             });
@@ -215,7 +214,7 @@ tap.test("get frank by id", function (t) {
       });
     });
   });
-});*/
+});
 
 tap.test("find both creatures with empty form", function (t) {
 
@@ -229,7 +228,7 @@ tap.test("find both creatures with empty form", function (t) {
           t.ok(!err, 'no error');
           browser.text(result, function(err, resultText) {
             t.ok(!err, 'no error');
-            t.ok(deepEqual([_creature,frank], JSON.parse(resultText)), "created creatures are in find");
+            t.ok(deepEqual([creatures['default'],creatures['frank']], JSON.parse(resultText)), "created creatures are in find");
             t.end();
           });
         });
@@ -254,7 +253,7 @@ tap.test("find both creatures by type", function (t) {
               t.ok(!err, 'no error');
               browser.text(result, function(err, resultText) {
                 t.ok(!err, 'no error');
-                t.ok(deepEqual([_creature,frank], JSON.parse(resultText)), "found both creatures by type");
+                t.ok(deepEqual([creatures['default'],creatures['frank']], JSON.parse(resultText)), "found both creatures by type");
                 t.end();
               });
             });
@@ -281,7 +280,7 @@ tap.test("find frank by id", function (t) {
               t.ok(!err, 'no error');
               browser.text(result, function(err, resultText) {
                 t.ok(!err, 'no error');
-                t.ok(deepEqual([frank], JSON.parse(resultText)), "found frank by id");
+                t.ok(deepEqual([creatures['frank']], JSON.parse(resultText)), "found frank by id");
                 t.end();
               });
             });
@@ -312,8 +311,8 @@ tap.test("update frank's life by id", function (t) {
                   t.ok(!err, 'no error');
                   browser.text(result, function(err, resultText) {
                     t.ok(!err, 'no error');
-                    frank = JSON.parse(resultText);
-                    t.equal(frank.life, 69,
+                    creatures['frank'] = JSON.parse(resultText);
+                    t.equal(creatures['frank'].life, 69,
                       "updated frank's life to 69 by id");
                     t.end();
                   });
@@ -343,7 +342,7 @@ tap.test("find frank by updated life", function (t) {
               t.ok(!err, 'no error');
               browser.text(result, function(err, resultText) {
                 t.ok(!err, 'no error');
-                t.ok(deepEqual([frank], JSON.parse(resultText)), "found frank by updated life");
+                t.ok(deepEqual([creatures['frank']], JSON.parse(resultText)), "found frank by updated life");
                 t.end();
               });
             });
@@ -377,7 +376,7 @@ tap.test("destroy frank by id", function (t) {
               browser.text(result, function(err, resultText) {
                 t.ok(!err, 'no error');
                 console.log(resultText);
-                //t.ok(deepEqual([frank], JSON.parse(resultText)), "destroyed frank by id");
+                //t.ok(deepEqual([creatures['frank']], JSON.parse(resultText)), "destroyed frank by id");
                 t.end();
               });
             });
@@ -405,7 +404,7 @@ tap.test("get frank by id fails since frank is dead", function (t) {
               t.ok(!err, 'no error');
               browser.text(result, function(err, resultText) {
                 t.ok(!err, 'no error');
-                //t.ok(deepEqual(frank, JSON.parse(resultText)), "frank is dead");
+                //t.ok(deepEqual(creatures['frank'], JSON.parse(resultText)), "creatures['frank'] is dead");
                 t.end();
               });
             });
