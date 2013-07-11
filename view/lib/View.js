@@ -7,6 +7,9 @@ var path = require('path'),
 var query = require('./query'),
     render = require('./render');
 
+//
+// sync creates a View
+//
 var View = function (options) {
   var self = this;
 
@@ -55,7 +58,7 @@ var View = function (options) {
 };
 
 //
-// loads a View
+// async loads a View
 //
 View.prototype.load = function (callback) {
   var self = this;
@@ -74,7 +77,7 @@ View.prototype.load = function (callback) {
 };
 
 //
-// loads a View template
+// sync loads a View template
 //
 View.prototype.loadTemplate = function (options) {
 
@@ -104,7 +107,7 @@ View.prototype.loadTemplate = function (options) {
 };
 
 //
-// loads a View presenter
+// sync loads a View presenter
 //
 View.prototype.loadPresenter = function(options) {
 
@@ -120,38 +123,11 @@ View.prototype.loadPresenter = function(options) {
   }
 
   return self;
-}
-
-View.prototype.getSubView = function(viewPath) {
-  // synchronously get subview from given path
-
-  var subView = this,
-      parts = viewPath.split('/');
-
-  // goes as deep as possible, doesn't error if nothing deeper exist
-  // TODO make it so it tells you how far it went wrt how far it wanted to go
-  while (true) {
-    if (parts.length === 0) {
-      return {subView: subView, subsLeft: parts};
-    }
-
-    var part = parts.shift();
-    if (part.length === 0) {
-      continue;
-    }
-    else if (typeof subView !== 'undefined' &&
-      typeof subView[part] !== 'undefined' &&
-      subView[part].name === part) {
-      subView = subView[part];
-      continue;
-    }
-    else {
-      parts.unshift(part);
-      return {subView: subView, subsLeft: parts};
-    }
-  }
 };
 
+//
+// async load a View from a path
+//
 View.prototype.loadViewPath = function (callback) {
 
   var self = this;
@@ -261,15 +237,43 @@ View.prototype.loadViewPath = function (callback) {
     walker.on('end', function() {
       return callback(null, self);
     });
-
   })();
+};
+//
+// sync get subview from given path
+//
+View.prototype.getSubView = function(viewPath) {
 
+  var subView = this,
+      parts = viewPath.split('/');
+
+  // goes as deep as possible, doesn't error if nothing deeper exist
+  // TODO make it so it tells you how far it went wrt how far it wanted to go
+  while (true) {
+    if (parts.length === 0) {
+      return {subView: subView, subsLeft: parts};
+    }
+
+    var part = parts.shift();
+    if (part.length === 0) {
+      continue;
+    }
+    else if (typeof subView !== 'undefined' &&
+      typeof subView[part] !== 'undefined' &&
+      subView[part].name === part) {
+      subView = subView[part];
+      continue;
+    }
+    else {
+      parts.unshift(part);
+      return {subView: subView, subsLeft: parts};
+    }
+  }
 };
 
-// export query and layout
-View.prototype.query = query;
-View.prototype.layout = require('./layout');
-
+//
+// async present a View
+//
 View.prototype.present = function(options, callback) {
 
   // freshly load template
@@ -283,18 +287,15 @@ View.prototype.present = function(options, callback) {
   return (this.presenter || this.render || render).call(this, options, callback);
 };
 
-//
-// TODO: Detects view type based on current path
-//
-View.prototype.detect = function (p) {
-  return path.extname(p);
-};
-
 View.prototype.breadcrumb = function () {
   if (typeof this.parent === "undefined") {
     return this.name;
   }
   return this.parent.breadcrumb() + '/' + this.name;
 };
+
+// export query and layout
+View.prototype.query = query;
+View.prototype.layout = require('./layout');
 
 module['exports'] = View;
