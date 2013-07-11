@@ -64,11 +64,7 @@ View.prototype.load = function (callback) {
   // TODO error handling
 
   self.loadTemplate(self);
-
-  if (self.presenterPath && !self.presenter) {
-    // TODO: make this async and error check this?
-    self.presenter = require(self.presenterPath);
-  }
+  self.loadPresenter(self);
 
   if (self.viewPath) {
     return self.loadViewPath(callback);
@@ -104,9 +100,27 @@ View.prototype.loadTemplate = function (options) {
   // update the querySelector context
   self.$ = self.querySelector = query(self.template);
 
-  // return template
   return self;
 };
+
+//
+// loads a View presenter
+//
+View.prototype.loadPresenter = function(options) {
+
+  var self = this;
+
+  if (options.presenter) {
+    // use given presenter
+    self.presenter = options.presenter;
+  } else if (options.presenterPath) {
+    // load presenter from module
+    // TODO: error handling
+    self.presenter = require(options.presenterPath);
+  }
+
+  return self;
+}
 
 View.prototype.getSubView = function(viewPath) {
   // synchronously get subview from given path
