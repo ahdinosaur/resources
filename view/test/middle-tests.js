@@ -252,7 +252,78 @@ test("load subview/layout with pathname that collides with prefix", function(t) 
   });
 });
 
-// TODO test layout resource
+test("load layout resource", function(t) {
+  var layout = resource.define('layout');
+  t.ok(layout, "layout is defined");
+  view.create({
+    template:
+      '<html>\n<head>\n  <title>big view test</title>\n</head>\n<body>\n  <div id="main"><div>\n</body>\n</html>'
+    }, function(err, _view) {
+      t.ok(!err, "no error");
+      t.ok(_view, "view is defined");
+      layout.view = _view;
+      resource.resources.layout = layout;
+      resource.layout = layout;
+      t.end();
+    });
+});
+
+test("nested views/layouts with layout resource with http and view.middle", function(t) {
+  view.create( { path: __dirname + "/multi-layout-more" } , function(err, _view) {
+    t.ok(!err, 'no error');
+    t.ok(_view, 'view is returned');
+
+    http.app.use(view.middle({view: _view})).as("view");
+
+    supertest(server) // first test index2
+      .get('/index2')
+      .end(function(err, res){
+        t.ok(!err, 'no error');
+        t.equal(res.text,
+          '<html>\n<head>\n  <title>big view test</title>\n</head>\n<body>\n  <div id="main"><h1>big</h1>\n<h2>nothing</h2>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div></div></body>\n</html>',
+          'response returns correct result');
+    });
+
+    supertest(server) // then test table2
+      .get('/table2')
+      .end(function(err, res){
+        t.ok(!err, 'no error');
+        t.equal(res.text,
+          '<html>\n<head>\n  <title>big view test</title>\n</head>\n<body>\n  <div id="main"><h1>big</h1>\n<h2>nothing</h2>\n<div id="main"><div class="table">steve</div>\n</div></div></body>\n</html>',
+          'response returns correct result');
+    });
+
+    supertest(server) // then test test2/index
+      .get('/test2/')
+      .end(function(err, res){
+        t.ok(!err, 'no error');
+        t.equal(res.text,
+          '<html>\n<head>\n  <title>big view test</title>\n</head>\n<body>\n  <div id="main"><h1>nothing</h1>\n<h2>big</h2>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div></div></body>\n</html>',
+          'response returns correct result');
+    });
+
+    supertest(server) // then test test2/index
+      .get('/test2/index')
+      .end(function(err, res){
+        t.ok(!err, 'no error');
+        t.equal(res.text,
+          '<html>\n<head>\n  <title>big view test</title>\n</head>\n<body>\n  <div id="main"><h1>nothing</h1>\n<h2>big</h2>\n<div id="main"><div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n</div></div></body>\n</html>',
+          'response returns correct result');
+    });
+
+    supertest(server) // then test test2/table
+      .get('/test2/table')
+      .end(function(err, res){
+        t.ok(!err, 'no error');
+        t.equal(res.text,
+          '<html>\n<head>\n  <title>big view test</title>\n</head>\n<body>\n  <div id="main"><h1>nothing</h1>\n<h2>big</h2>\n<div id="main"><div class="table">steve</div>\n</div></div></body>\n</html>',
+          'response returns correct result');
+
+        http.app.remove("view");
+        t.end();
+    });
+  });
+});
 
 test("stop a view server", function(t) {
   server.close(function(err) {
