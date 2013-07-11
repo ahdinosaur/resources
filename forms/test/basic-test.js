@@ -94,6 +94,7 @@ tap.test("get / with no creatures", function (t) {
   browser.get(baseUrl, function (err, html) {
     t.ok(!err, 'no error');
     browser.title(function(err, title) {
+      t.ok(!err, 'no error');
       t.equal(title, 'big forms test', 'title is correct');
       browser.elementByCssSelector('.result', function(err, result) {
         t.ok(!err, 'no error');
@@ -144,6 +145,7 @@ tap.test("get / with a creature", function (t) {
   browser.get(baseUrl, function (err, result) {
     t.ok(!err, 'no error');
     browser.title(function(err, title) {
+      t.ok(!err, 'no error');
       browser.elementByClassName('result', function(err, result) {
         t.ok(!err, 'no error');
         browser.text(result, function(err, resultText) {
