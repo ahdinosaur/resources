@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# find where script is located
-DIR=$(cd $(dirname "$0") && pwd)
-
-rm -rf $DIR/../../resources/
-cd $DIR
-node *.js

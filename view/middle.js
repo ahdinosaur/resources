@@ -57,16 +57,15 @@ module['exports'] = function (options) {
       var finish = function(err, html) {
         // if there is a layout, view the layout too
         if (resource.layout) {
-          _view.layout({
-            layout: resource.layout.view,
-            layoutOptions: {
+          _view.$ = _view.querySelector = _view.$.load(html);
+          _view.layout(
+            resource.layout.view,
+            {
               request: req,
               response: res,
               data: req.resource.params,
               err: err
-            },
-            html: html
-          }, function(err, result) {
+            }, function(err, result) {
             if (err) { return next(err); }
             // return result html from layout
             res.end(result);

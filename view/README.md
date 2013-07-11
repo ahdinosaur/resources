@@ -1,11 +1,8 @@
 # view
 
+
 for managing views
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 70d031b965d51534463465b7783c9edcdee144fb
 ## API
 
 #### [properties](#view-properties)
@@ -22,6 +19,7 @@ for managing views
 #### [methods](#view-methods)
 
   - [create](#view-methods-create) (options, callback)
+
 
 
 <a name="view-properties"></a>
@@ -56,6 +54,7 @@ for managing views
   - **description:** : the presenter function of the view
 
 
+
 <a name="view-methods"></a> 
 
 ## methods 
@@ -77,7 +76,9 @@ creates a new view
   - **required** : true
 
 
+
 ## dependencies 
 - [cheerio](http://npmjs.org/package/cheerio) v0.9.x
+
 
 *README auto-generated with [docs](https://github.com/bigcompany/resources/tree/master/docs)*

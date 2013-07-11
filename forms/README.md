@@ -1,5 +1,6 @@
 # forms
 
+
 for generating HTML forms
 
 ## API
@@ -14,11 +15,13 @@ for generating HTML forms
   - [generate](#forms-methods-generate) (options)
 
 
+
 for generating HTML forms
 
 - **id** 
 
   - **type** : any
+
 
 
 <a name="forms-methods"></a> 
@@ -50,6 +53,8 @@ generates a new form based on a resource schema
   - **callback**
 
     - type : *function*
+
+
 
 
 

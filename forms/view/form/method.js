@@ -12,12 +12,8 @@ module['exports'] = function (options, callback) {
 
   var domWithLayout = function(error) {
     options.err = error;
-    self.layout({
-      layout: self.parent.parent.layout,
-      layoutOptions: options,
-      selector: "#forms-main",
-      html: $.html()
-    }, callback);
+    options.selector = '#forms-main';
+    self.layout(self.parent.parent.layout, options, callback);
   };
 
   // legend should show method description or method name

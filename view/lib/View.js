@@ -228,10 +228,8 @@ View.prototype.loadViewPath = function (callback) {
 
 };
 
-// export query
+// export query and layout
 View.prototype.query = query;
-
-// export layout
 View.prototype.layout = require('./layout');
 
 View.prototype.present = function(options, callback) {
