@@ -3,37 +3,81 @@ var wd = require('wd')
   , resource = require('resource')
   , view = resource.use('view')
   , forms = resource.use('forms')
-  , creature = resource.use('creature')
   , creatures = {}
   , server
   , browser = wd.remote();
 
-/*
-browser.on('status', function(info) {
-  console.log(info.cyan);
-});
+//
+// create test "creature" resource
+//
+var creature = resource.define('creature');
 
-browser.on('command', function(meth, path, data) {
-  console.log(' > ' + meth.yellow, path.grey, data || '');
-});
+creature.schema.description = "example resource for creatures like dragons, unicorns, and ponies";
 
-*/
+creature.persist('memory');
 
-var deepEqual = function(actual, expected) {
-  try {
-    assert.deepEqual(actual, expected);
+creature.property('type', { type: "string", enum: ['dragon', 'unicorn', 'pony'], default: "dragon"});
+creature.property('isAwesome', { type: "boolean", default: true });
+creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
+
+
+function poke (callback) {
+  if (callback) {
+    return callback(null, 'owe!');
   }
-  catch (err) {
-    return false;
-  }
-  return true;
+  return 'owe!';
 }
 
-var tap = require("tap");
+function fire (options, callback) {
+  var result = {
+    status: "fired",
+    direction: options.direction,
+    power: options.power
+  };
+  if(callback) {
+    return callback(null, result);
+  }
+  return result;
+}
+
+creature.method('poke', poke, {
+  "description": "pokes the creature"
+});
+
+creature.method('fire', fire, {
+  "description": "fires a lazer at a certain power and direction",
+  "properties": {
+    "options": {
+      "type": "object",
+      "properties": {
+        "power": {
+          "type": "number",
+          "default": 1,
+          "required": true
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["up", "down", "left", "right"],
+          "required": true,
+          "default": "up"
+        }
+      },
+      "callback": {
+        "type": "function",
+        "required": false
+      }
+    }
+}});
+
+exports.creature = creature;
 
 //
-// add layout that provides bootstrap
+// init stuff
 //
+var tap = require("tap")
+  , baseUrl = "http://localhost:8888";
+
+// add layout which provides bootstrap
 tap.test('use the layout', function (t) {
   var layout = resource.define('layout');
   t.ok(layout, "layout is defined");
@@ -51,15 +95,19 @@ tap.test('use the layout', function (t) {
         <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>\
       </body>\
       </html>\
-      '
-    }, function(err, _view) {
-      t.ok(!err, "no error");
-      t.ok(_view, "view is defined");
-      layout.view = _view;
-      resource.resources.layout = layout;
-      resource.layout = layout;
-      t.end();
-    });
+      ',
+    presenter: function(options, callback) {
+      if (options.err) { return callback(options.err); }
+      return callback(null, this.$.html());
+    }
+  }, function(err, _view) {
+    t.ok(!err, "no error");
+    t.ok(_view, "view is defined");
+    layout.view = _view;
+    resource.resources.layout = layout;
+    resource.layout = layout;
+    t.end();
+  });
 });
 
 tap.test('start the forms resource', function (t) {
@@ -80,15 +128,68 @@ tap.test('start the webdriver client', function (t) {
       , tags : ["examples"]
       , name: "This is an example test"
     }, function() {
-
     t.ok(true, 'browser started');
     t.end();
   });
 
 });
 
-var baseUrl = "http://localhost:8888";
+//
+// utility functions
+//
+var deepEqual = function(actual, expected) {
+  try {
+    assert.deepEqual(actual, expected);
+  }
+  catch (err) {
+    return false;
+  }
+  return true;
+};
 
+var submitElement = function (selector, callback) {
+  browser.elementByCssSelector(selector, function (err, element) {
+    if (err) { return callback(err); }
+    browser.submit(element, function (err) {
+      if (err) { return callback(err); }
+      return callback(null);
+    });
+  });
+};
+
+var getElementText = function (selector, callback) {
+  browser.elementByCssSelector(selector, function (err, element) {
+    if (err) { return callback(err); }
+    browser.text(element, function (err, resultText) {
+      if (err) { return callback(err); }
+      return callback(null, resultText);
+    });
+  });
+};
+
+var submitElementWithResult = function (elementSelector, resultSelector, callback) {
+  submitElement(elementSelector, function(err) {
+    if (err) { return callback(err); }
+    getElementText(resultSelector, function(err, resultText) {
+      if (err) { return callback(err); }
+      return callback(null, resultText);
+    });
+  });
+};
+
+var typeIntoElement = function (selector, text, callback) {
+  browser.elementByCssSelector(selector, function (err, element) {
+    if (err) { return callback(err); }
+    browser.type(element, text, function (err) {
+      if (err) { return callback(err); }
+      return callback(null);
+    });
+  });
+};
+
+//
+// forms tests
+//
 tap.test("get / with no creatures", function (t) {
 
   browser.get(baseUrl, function (err, html) {
@@ -96,139 +197,91 @@ tap.test("get / with no creatures", function (t) {
     browser.title(function(err, title) {
       t.ok(!err, 'no error');
       t.equal(title, 'big forms test', 'title is correct');
-      browser.elementByCssSelector('.result', function(err, result) {
+      getElementText('.result', function (err, result) {
         t.ok(!err, 'no error');
-        browser.text(result, function(err, resultText) {
-          t.ok(!err, 'no error');
-          t.equal(resultText, "[]");
+          t.equal(result, "[]");
           t.end();
-        });
       });
     });
   });
 });
 
+// NOTE: in addition to the signature,
+//       this inherently tests that create fills with default properties
+//       and that creating a resource with and empty id generates an id,
 tap.test("create a creature with default properties", function (t) {
 
   browser.get(baseUrl + "/creature/create", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementByCssSelector('form', function(err, form) {
+    submitElementWithResult('form', '.result', function(err, resultText) {
       t.ok(!err, 'no error');
-      browser.submit(form, function(err) {
-        t.ok(!err, 'no error');
-        browser.elementByCssSelector('.result', function(err, result) {
-          t.ok(!err, 'no error');
-          browser.text(result, function(err, resultText) {
-            t.ok(!err, 'no error');
-            creatures['default'] = JSON.parse(resultText);
-            t.equal(creatures['default'].type,
-              creature.schema.properties.type.default,
-              "created creature has default type");
-            t.equal(creatures['default'].life,
-              creature.schema.properties.life.default,
-              "created creature has default life");
-            t.equal(creatures['default'].isAwesome,
-              creature.schema.properties.isAwesome.default,
-              "created creature has default awesomeness");
-            t.end();
-          });
-        });
-      });
+      creatures['default'] = JSON.parse(resultText);
+      t.equal(creatures['default'].type,
+        creature.schema.properties.type.default,
+        "created creature has default type");
+      t.equal(creatures['default'].isAwesome,
+        creature.schema.properties.isAwesome.default,
+        "created creature has default awesomeness");
+      t.equal(creatures['default'].secret,
+        creature.schema.properties.secret.default, 
+        "form-created creature has default secret");
+      t.end();
     });
   });
 });
 
 
-
-tap.test("get / with a creature", function (t) {
+tap.test("get / with a creature, should default to all", function (t) {
 
   browser.get(baseUrl, function (err, result) {
     t.ok(!err, 'no error');
     browser.title(function(err, title) {
       t.ok(!err, 'no error');
-      browser.elementByClassName('result', function(err, result) {
+      getElementText('.result', function(err, resultText) {
         t.ok(!err, 'no error');
-        browser.text(result, function(err, resultText) {
-          t.ok(!err, 'no error');
-          t.ok(deepEqual([creatures['default']], JSON.parse(resultText)), "created creature is in all");
-          t.end();
-        });
+        t.ok(deepEqual([creatures['default']], JSON.parse(resultText)), "created creature is in all");
+        t.end();
       });
     });
   });
 });
 
+// add to creature schema a "required" property with no defaults 
+creature.property('life', { type: "number", required: true });
 
-tap.test("create a creature with specified properties", function (t) {
+/*
+// TODO: fix this, problem is it accepts the empty string. is that ok?
+tap.test("cannot create a creature without required property", function (t) {
 
   browser.get(baseUrl + "/creature/create", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementById('id', function(err, result) {
+    submitElementWithResult('form', '#life  > .controls > .help-inline', function(err, resultText){
+      console.log(err);
       t.ok(!err, 'no error');
-      result.type("frank", function(err) {
-        t.ok(!err, 'no error');
-        browser.elementByCssSelector('form', function(err, form) {
-          t.ok(!err, 'no error');
-          browser.submit(form, function(err) {
-            t.ok(!err, 'no error');
-            browser.elementByCssSelector('.result', function(err, result) {
-              t.ok(!err, 'no error');
-              browser.text(result, function(err, resultText) {
-                t.ok(!err, 'no error');
-                creatures['frank'] = JSON.parse(resultText);
-                t.equal(creatures['frank'].id,
-                  "frank",
-                  "created creature has id frank");
-                t.end();
-              });
-            });
-          });
-        });
-      });
+      console.log(resultText);
+      t.equal(resultText, 'id must be unique', 'error message shows cannot use duplicate id');
+      t.end();
     });
   });
 });
+*/
 
-tap.test("get frank by id", function (t) {
+tap.test("create a creature (frank) with specified properties, can't use forms to access private property", function (t) {
 
-  browser.get(baseUrl + "/creature/get", function (err, html) {
+  browser.get(baseUrl + "/creature/create", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementById('id', function(err, result) {
+    typeIntoElement('#id > .controls > input', "frank", function(err) {
       t.ok(!err, 'no error');
-      result.type("frank", function(err) {
+      typeIntoElement('#life > .controls > input', "10", function(err) {
         t.ok(!err, 'no error');
-        browser.elementByCssSelector('form', function(err, form) {
-          t.ok(!err, 'no error');
-          browser.submit(form, function(err) {
+        browser.elementByCssSelector('#secret', function (err, result) {
+          t.ok(err, 'error when selecting private input');
+          t.equal(result, undefined, 'private input is undefined');
+          submitElementWithResult('form', '.result', function(err, resultText){
             t.ok(!err, 'no error');
-            browser.elementByCssSelector('.result', function(err, result) {
-              t.ok(!err, 'no error');
-              browser.text(result, function(err, resultText) {
-                t.ok(!err, 'no error');
-                t.ok(deepEqual(creatures['frank'], JSON.parse(resultText)), "got frank");
-                t.end();
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-});
-
-tap.test("find both creatures with empty form", function (t) {
-
-  browser.get(baseUrl + "/creature/find", function (err, html) {
-    t.ok(!err, 'no error');
-    browser.elementByCssSelector('form', function(err, form) {
-      t.ok(!err, 'no error');
-      browser.submit(form, function(err) {
-        t.ok(!err, 'no error');
-        browser.elementByCssSelector('.result', function(err, result) {
-          t.ok(!err, 'no error');
-          browser.text(result, function(err, resultText) {
-            t.ok(!err, 'no error');
-            t.ok(deepEqual([creatures['default'],creatures['frank']], JSON.parse(resultText)), "created creatures are in find");
+            creatures['frank'] = JSON.parse(resultText);
+            t.equal(creatures['frank'].id, "frank", "created creature has id frank");
+            t.equal(creatures['frank'].life, 10, "frank has life 10");
             t.end();
           });
         });
@@ -237,110 +290,89 @@ tap.test("find both creatures with empty form", function (t) {
   });
 });
 
+/*
+tap.test("there is only one frank: cannot create resource with duplicate id", function(t) {
+
+  browser.get(baseUrl + "/creature/create", function (err, html) {
+    t.ok(!err, 'no error');
+    typeIntoElement('#id > .controls > input', "frank", function(err) {
+      t.ok(!err, 'no error');
+      submitElementWithResult('form', '#id  > .controls > .help-inline', function(err, resultText){
+        t.ok(!err, 'no error');
+        t.equal(resultText, 'id must be unique', 'error message shows cannot use duplicate id');
+        t.end();
+      });
+    });
+  });
+});
+*/
+
+tap.test("find both creatures with empty form", function (t) {
+
+  browser.get(baseUrl + "/creature/find", function (err, html) {
+    t.ok(!err, 'no error');
+    submitElementWithResult('form', '.result', function(err, resultText) {
+      t.ok(!err, 'no error');
+      t.ok(deepEqual([creatures['default'],creatures['frank']], JSON.parse(resultText)), "created creatures are in find");
+      t.end();
+    });
+  });
+});
+
+// TODO: should find show the dropdown for type? ie dragon unicorn puppy?
+// TODO: related, find fails to require types on properties (ie string in life and isAwesome)
 tap.test("find both creatures by type", function (t) {
 
   browser.get(baseUrl + "/creature/find", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementById('type', function(err, result) {
+    typeIntoElement('#type > .controls > input', 'dragon', function(err) {
       t.ok(!err, 'no error');
-      result.type("dragon", function(err) {
+      submitElementWithResult('form', '.result', function(err, resultText) {
         t.ok(!err, 'no error');
-        browser.elementByCssSelector('form', function(err, form) {
-          t.ok(!err, 'no error');
-          browser.submit(form, function(err) {
-            t.ok(!err, 'no error');
-            browser.elementByCssSelector('.result', function(err, result) {
-              t.ok(!err, 'no error');
-              browser.text(result, function(err, resultText) {
-                t.ok(!err, 'no error');
-                t.ok(deepEqual([creatures['default'],creatures['frank']], JSON.parse(resultText)), "found both creatures by type");
-                t.end();
-              });
-            });
-          });
-        });
+        t.ok(deepEqual([creatures['default'],creatures['frank']], JSON.parse(resultText)), "found both creatures by type");
+        t.end();
       });
     });
   });
 });
 
-tap.test("find frank by id", function (t) {
+// TODO: should find show the checkbox for booleans?
+tap.test("find no creatures that aren't awesome", function(t) {
 
   browser.get(baseUrl + "/creature/find", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementById('id', function(err, result) {
+    typeIntoElement('#isAwesome > .controls > input', 'false', function(err) {
       t.ok(!err, 'no error');
-      result.type("frank", function(err) {
+      submitElementWithResult('form', '.result', function(err, resultText) {
         t.ok(!err, 'no error');
-        browser.elementByCssSelector('form', function(err, form) {
-          t.ok(!err, 'no error');
-          browser.submit(form, function(err) {
-            t.ok(!err, 'no error');
-            browser.elementByCssSelector('.result', function(err, result) {
-              t.ok(!err, 'no error');
-              browser.text(result, function(err, resultText) {
-                t.ok(!err, 'no error');
-                t.ok(deepEqual([creatures['frank']], JSON.parse(resultText)), "found frank by id");
-                t.end();
-              });
-            });
-          });
-        });
+        t.equal(resultText, '[]', "no not-awesome creatures exist");
+        t.end();
       });
     });
   });
 });
 
-tap.test("update frank's life by id", function (t) {
+tap.test("update frank's life by id, then find him by updated life", function (t) {
 
+  // update frank
   browser.get(baseUrl + "/creature/update", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementById('id', function(err, result) {
+    typeIntoElement('#id > .controls > input', 'frank', function(err) {
       t.ok(!err, 'no error');
-      result.type('frank', function(err) {
+      typeIntoElement('#life > .controls > input', '\uE003\uE00369', function(err) {
         t.ok(!err, 'no error');
-        browser.elementById('life', function(err, result) {
+        submitElementWithResult('form', '.result', function(err, resultText) {
           t.ok(!err, 'no error');
-          result.type('\uE003\uE00369', function(err) {
-            t.ok(!err, 'no error');
-            browser.elementByCssSelector('form', function(err, form) {
-              t.ok(!err, 'no error');
-              browser.submit(form, function(err) {
-                t.ok(!err, 'no error');
-                browser.elementByCssSelector('.result', function(err, result) {
-                  t.ok(!err, 'no error');
-                  browser.text(result, function(err, resultText) {
-                    t.ok(!err, 'no error');
-                    creatures['frank'] = JSON.parse(resultText);
-                    t.equal(creatures['frank'].life, 69,
-                      "updated frank's life to 69 by id");
-                    t.end();
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-});
+          creatures['frank'] = JSON.parse(resultText);
+          t.equal(creatures['frank'].life, 69,
+            "updated frank's life to 69 by id");
 
-tap.test("find frank by updated life", function (t) {
-
-  browser.get(baseUrl + "/creature/find", function (err, html) {
-    t.ok(!err, 'no error');
-    browser.elementById('life', function(err, result) {
-      t.ok(!err, 'no error');
-      result.type("69", function(err) {
-        t.ok(!err, 'no error');
-        browser.elementByCssSelector('form', function(err, form) {
-          t.ok(!err, 'no error');
-          browser.submit(form, function(err) {
+          // find frank
+          browser.get(baseUrl + "/creature/find", function (err, html) {
             t.ok(!err, 'no error');
-            browser.elementByCssSelector('.result', function(err, result) {
+            typeIntoElement('#life > .controls > input', '69', function(err) {
               t.ok(!err, 'no error');
-              browser.text(result, function(err, resultText) {
+              submitElementWithResult('form', '.result', function(err, resultText) {
                 t.ok(!err, 'no error');
                 t.ok(deepEqual([creatures['frank']], JSON.parse(resultText)), "found frank by updated life");
                 t.end();
@@ -353,32 +385,76 @@ tap.test("find frank by updated life", function (t) {
   });
 });
 
+tap.test("(fail to) update frank's life to a string, form shows error", function (t) {
 
-
-
+  browser.get(baseUrl + "/creature/update", function (err, html) {
+    t.ok(!err, 'no error');
+    typeIntoElement('#id > .controls > input', 'frank', function(err) {
+      t.ok(!err, 'no error');
+      typeIntoElement('#life > .controls > input', '\uE003\uE003infinity', function(err) {
+        t.ok(!err, 'no error');
+        submitElementWithResult('form', '#life  > .controls > .help-inline', function(err, resultText) {
+          t.ok(!err, 'no error');
+          t.equal(resultText, 'must be of number type', 'life requires a number');
+          t.end();
+        });
+      });
+    });
+  });
+});
 
 /*
-// TODO: make destroy work
-tap.test("destroy frank by id", function (t) {
+tap.test("poke frank", function (t) {
 
+  browser.get(baseUrl + "/creature/poke", function (err, html) {
+    t.ok(!err, 'no error');
+    submitElementWithResult('form', '.result', function(err, resultText) {
+      t.ok(!err, 'no error');
+      t.equal(resultText, 'owe!', 'frank was poked');
+      t.end();
+    });
+  });
+});
+
+tap.test("fire frank's lazer", function(t) {
+
+  browser.get(baseUrl + "/creature/fire", function (err, html) {
+    t.ok(!err, 'no error');
+    typeIntoElement('#power', '\uE003999', function(err) {
+      t.ok(!err, 'no error');
+      submitElementWithResult('form', '.result', function(err, resultText) {
+        t.ok(!err, 'no error');
+        t.ok(deepEqual({
+          "status": "fired",
+          "direction": "up",
+          "power": 999
+        },
+        JSON.parse(resultText)),
+        'frank fired ze lazerz');
+        t.end();
+      });
+    });
+  });
+});
+
+tap.test("destroy frank by id, then fail to get him", function (t) {
+
+  // destroy frank
   browser.get(baseUrl + "/creature/destroy", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementById('id', function(err, result) {
+    typeIntoElement('#id', 'frank', function(err) {
       t.ok(!err, 'no error');
-      result.type("frank", function(err) {
+      submitElement('form', function(err) {
         t.ok(!err, 'no error');
-        browser.elementByCssSelector('form', function(err, form) {
+
+        // (fail to) get frank
+        browser.get(baseUrl + "/creature/get", function (err, html) {
           t.ok(!err, 'no error');
-          browser.submit(form, function(err) {
+          typeIntoElement('#id', 'frank', function(err) {
             t.ok(!err, 'no error');
-            browser.elementByCssSelector('.result', function(err, result) {
-              t.ok(!err, 'no error');
-              browser.text(result, function(err, resultText) {
-                t.ok(!err, 'no error');
-                console.log(resultText);
-                //t.ok(deepEqual([creatures['frank']], JSON.parse(resultText)), "destroyed frank by id");
-                t.end();
-              });
+            submitElementWithResult('form', '.result', function(err, resultText) {
+              t.ok(err, 'error getting dead frank');
+              t.end();
             });
           });
         });
@@ -386,27 +462,32 @@ tap.test("destroy frank by id", function (t) {
     });
   });
 });
+/*
+// NOTE: this also tests that id is prefilled into form if given in URL
+tap.test("resurrect then update frank with updateOrCreate", function (t) {
 
-// TODO: make this work once destroy and get work
-tap.test("get frank by id fails since frank is dead", function (t) {
-
-  browser.get(baseUrl + "/creature/get", function (err, html) {
+  // recreate frank
+  browser.get(baseUrl + "/creature/updateOrCreate", function (err, html) {
     t.ok(!err, 'no error');
-    browser.elementById('id', function(err, result) {
+    typeIntoElement('#id', 'frank', function(err) {
       t.ok(!err, 'no error');
-      result.type("frank", function(err) {
-        t.ok(!err, 'no error');
-        browser.elementByCssSelector('form', function(err, form) {
+      submitElementWithResult('form', '.result', function(err, resultText) {
+        creatures['frank'] = JSON.parse(resultText);
+        t.equal(creatures['frank'].id,
+          "frank",
+          "created creature has id frank");
+
+        // update frank's life, id is prefilled
+        browser.get(baseUrl + "/creature/updateOrCreate", function (err, html) {
           t.ok(!err, 'no error');
-          browser.submit(form, function(err) {
+          typeIntoElement('#life', '\uE003\uE00336', function(err) {
             t.ok(!err, 'no error');
-            browser.elementByCssSelector('.result', function(err, result) {
+            submitElementWithResult('form', '.result', function(err, resultText) {
               t.ok(!err, 'no error');
-              browser.text(result, function(err, resultText) {
-                t.ok(!err, 'no error');
-                //t.ok(deepEqual(creatures['frank'], JSON.parse(resultText)), "creatures['frank'] is dead");
-                t.end();
-              });
+              creatures['frank'] = JSON.parse(resultText);
+              t.equal(creatures['frank'].life, 36,
+                "updated new frank's life to 36");
+              t.end();
             });
           });
         });
@@ -415,6 +496,16 @@ tap.test("get frank by id fails since frank is dead", function (t) {
   });
 });
 
+// TODO: fix create view so that create gives error.errors stuff when id is duplicate
+// related: figure out what to do with the error when submitting update w invalid id
+
+// TODO: change functionality of update with a prefilled id that does not exist
+
+// TODO: make it so that inputs ids are in control group, not input (done for string)
+
+// TODO: make it so forms's forms are tall enough to see letter 'y'
+
+/*
 tap.test('clean up and shut down browser', function (t) {
   browser.quit();
   t.end();

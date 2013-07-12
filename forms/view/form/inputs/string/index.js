@@ -20,7 +20,7 @@ module['exports'] = function (options, callback) {
     if (err) { return callback(err); }
 
     $('.controls').prepend(result);
-    $('input').attr('id',  input.name);
+    $('.control-group').attr('id',  input.name);
     $('input').attr('name', input.name);
     $('input').attr('value', input.value.toString());
 

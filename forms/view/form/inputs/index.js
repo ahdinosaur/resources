@@ -1,8 +1,8 @@
 module['exports'] = function (options, callback) {
 
   var output = "", _control, v, 
-  self = this,
-  control = options.control;
+      self = this,
+      control = options.control;
   //
   // determine the type of control to render
   //

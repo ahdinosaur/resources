@@ -54,7 +54,7 @@ module['exports'] = function (options, callback) {
 
   function showForm (data, error) {
     data = data || {};
-    var errors = (error) ? error.errors : {};
+    var errors = (error) ? error.errors : [];
     if(typeof rMethod.schema.properties !== 'undefined') {
       var props = rMethod.schema.properties || {};
 
@@ -90,9 +90,18 @@ module['exports'] = function (options, callback) {
           control.name = property;
 
           // if we have errors, add them to the control
-          for(var e in errors) {
-            if (errors[e].property === control.name) {
-              control.error = errors[e];
+          if (error && error.errors) {
+            for (var i = 0; i < errors.length; i++) {
+              var e = errors[i];
+              if (e.property === control.name) {
+                control.error = e;
+                // pop from errors after adding error message to forms.
+                errors.splice(i, i+1);
+                // if we now have no more errors, forms handled it so dont pass error
+                if (errors.length === 0) {
+                  error = null;
+                }
+              }
             }
           }
 
