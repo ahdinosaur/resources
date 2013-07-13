@@ -1,7 +1,7 @@
 var resource = require('resource'),
     cli = resource.define('cli');
 
-var logger = resource.logger;
+var logger = resource.use('logger');
 
 cli.schema.description = "provides a command line interface";
 cli.started = false;

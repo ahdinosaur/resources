@@ -6,7 +6,7 @@ var resource = require('resource'),
 //
 // Use the built-in resource console logging utility
 //
-var logger = resource.logger;
+var logger = resource.use('logger');
 
 //
 // Maps to Resource.get
