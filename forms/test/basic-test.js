@@ -448,14 +448,13 @@ tap.test("fire frank's lazer", function(t) {
     });
   });
 });
-/*
 
 tap.test("destroy frank by id, then fail to get him", function (t) {
 
   // destroy frank
   browser.get(baseUrl + "/creature/destroy", function (err, html) {
     t.ok(!err, 'no error');
-    typeIntoElement('#id', 'frank', function(err) {
+    typeIntoElement('#id > .controls > input', 'frank', function(err) {
       t.ok(!err, 'no error');
       submitElement('form', function(err) {
         t.ok(!err, 'no error');
@@ -463,10 +462,11 @@ tap.test("destroy frank by id, then fail to get him", function (t) {
         // (fail to) get frank
         browser.get(baseUrl + "/creature/get", function (err, html) {
           t.ok(!err, 'no error');
-          typeIntoElement('#id', 'frank', function(err) {
+          typeIntoElement('#id > .controls > input', 'frank', function(err) {
             t.ok(!err, 'no error');
-            submitElementWithResult('form', '.result', function(err, resultText) {
-              t.ok(err, 'error getting dead frank');
+            submitElementWithResult('form', '#id  > .controls > .help-inline', function(err, resultText) {
+              t.ok(!err, 'no error');
+              t.equal(resultText, 'frank not found', 'could not get dead frank');
               t.end();
             });
           });
@@ -475,14 +475,13 @@ tap.test("destroy frank by id, then fail to get him", function (t) {
     });
   });
 });
-/*
-// NOTE: this also tests that id is prefilled into form if given in URL
+
 tap.test("resurrect then update frank with updateOrCreate", function (t) {
 
   // recreate frank
   browser.get(baseUrl + "/creature/updateOrCreate", function (err, html) {
     t.ok(!err, 'no error');
-    typeIntoElement('#id', 'frank', function(err) {
+    typeIntoElement('#id > .controls > input', 'frank', function(err) {
       t.ok(!err, 'no error');
       submitElementWithResult('form', '.result', function(err, resultText) {
         creatures['frank'] = JSON.parse(resultText);
@@ -490,17 +489,20 @@ tap.test("resurrect then update frank with updateOrCreate", function (t) {
           "frank",
           "created creature has id frank");
 
-        // update frank's life, id is prefilled
+        // update frank's life
         browser.get(baseUrl + "/creature/updateOrCreate", function (err, html) {
           t.ok(!err, 'no error');
-          typeIntoElement('#life', '\uE003\uE00336', function(err) {
+          typeIntoElement('#id > .controls > input', 'frank', function(err) {
             t.ok(!err, 'no error');
-            submitElementWithResult('form', '.result', function(err, resultText) {
+            typeIntoElement('#life > .controls > input', '\uE003\uE00336', function(err) {
               t.ok(!err, 'no error');
-              creatures['frank'] = JSON.parse(resultText);
-              t.equal(creatures['frank'].life, 36,
-                "updated new frank's life to 36");
-              t.end();
+              submitElementWithResult('form', '.result', function(err, resultText) {
+                t.ok(!err, 'no error');
+                creatures['frank'] = JSON.parse(resultText);
+                t.equal(creatures['frank'].life, 36,
+                  "updated new frank's life to 36");
+                t.end();
+              });
             });
           });
         });

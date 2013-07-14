@@ -24,6 +24,8 @@ module['exports'] = function (options, callback) {
 
   // if the action is to post, submit the form
   if (options.action === 'post' && !options.error) {
+    console.log("posting");
+    console.log(options.data);
     var cb = function (err, result) {
 
       // if there are errors, remove results and display errors on the forms
