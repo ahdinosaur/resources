@@ -25,7 +25,7 @@ module['exports'] = function (options, callback) {
       else if (err) {
         options.err = err;
         options.selector = "#forms-main";
-        return self.layout(self.parent.parent.layout, options, callback);
+        return self.layout(self.parent.layout, options, callback);
       }
 
       // id is in use, so display form error
