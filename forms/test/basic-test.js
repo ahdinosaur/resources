@@ -3,79 +3,76 @@ var wd = require('wd')
   , resource = require('resource')
   , view = resource.use('view')
   , forms = resource.use('forms')
+  , creature
   , creatures = {}
   , server
   , browser = wd.remote();
 
-//
-// create test "creature" resource
-//
-var creature = resource.define('creature');
-
-creature.schema.description = "example resource for creatures like dragons, unicorns, and ponies";
-
-creature.persist('memory');
-
-creature.property('type', { type: "string", enum: ['dragon', 'unicorn', 'pony'], default: "dragon"});
-creature.property('isAwesome', { type: "boolean", default: true });
-creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
-
-
-function poke (callback) {
-  if (callback) {
-    return callback(null, 'owe!');
-  }
-  return 'owe!';
-}
-
-function fire (options, callback) {
-  var result = {
-    status: "fired",
-    direction: options.direction,
-    power: options.power
-  };
-  if(callback) {
-    return callback(null, result);
-  }
-  return result;
-}
-
-creature.method('poke', poke, {
-  "description": "pokes the creature"
-});
-
-creature.method('fire', fire, {
-  "description": "fires a lazer at a certain power and direction",
-  "properties": {
-    "options": {
-      "type": "object",
-      "properties": {
-        "power": {
-          "type": "number",
-          "default": 1,
-          "required": true
-        },
-        "direction": {
-          "type": "string",
-          "enum": ["up", "down", "left", "right"],
-          "required": true,
-          "default": "up"
-        }
-      },
-      "callback": {
-        "type": "function",
-        "required": false
-      }
-    }
-}});
-
-exports.creature = creature;
 
 //
 // init stuff
 //
 var tap = require("tap")
   , baseUrl = "http://localhost:8888";
+
+tap.test("create test creature resource", function(t) {
+  creature = resource.define('creature');
+  t.ok(creature, "creature is defined");
+
+  creature.schema.description = "example resource for creatures like dragons, unicorns, and ponies";
+
+  creature.persist('memory');
+
+  creature.property('type', { type: "string", enum: ['dragon', 'unicorn', 'pony'], default: "dragon"});
+  creature.property('isAwesome', { type: "boolean", default: true });
+  creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
+  creature.property('life', { type: "number", required: true });
+
+
+  function poke (callback) {
+    return callback(null, 'owe!');
+  }
+
+  function fire (options, callback) {
+    var result = {
+      status: "fired",
+      direction: options.direction,
+      power: options.power
+    };
+    return callback(null, result);
+  }
+
+  creature.method('poke', poke, {
+    "description": "pokes the creature"
+  });
+
+  creature.method('fire', fire, {
+    "description": "fires a lazer at a certain power and direction",
+    "properties": {
+      "options": {
+        "type": "object",
+        "properties": {
+          "power": {
+            "type": "number",
+            "default": 1,
+            "required": true
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["up", "down", "left", "right"],
+            "required": true,
+            "default": "up"
+          }
+        },
+        "callback": {
+          "type": "function",
+          "required": false
+        }
+      }
+  }});
+
+  t.end();
+});
 
 // add layout which provides bootstrap
 tap.test('use the layout', function (t) {
@@ -97,7 +94,10 @@ tap.test('use the layout', function (t) {
       </html>\
       ',
     presenter: function(options, callback) {
-      if (options.err) { return callback(options.err); }
+      if (options.err) {
+        console.log("LAYOUT RECEIVED ERROR");
+        return callback(options.err);
+      }
       return callback(null, this.$.html());
     }
   }, function(err, _view) {
@@ -208,24 +208,38 @@ tap.test("get / with no creatures", function (t) {
 
 // NOTE: in addition to the signature,
 //       this inherently tests that create fills with default properties
-//       and that creating a resource with and empty id generates an id,
-tap.test("create a creature with default properties", function (t) {
+//       and that creating a resource with an empty id generates an id,
+tap.test("create a creature with default properties, must specify required property", function (t) {
 
+  // go to create page
   browser.get(baseUrl + "/creature/create", function (err, html) {
     t.ok(!err, 'no error');
-    submitElementWithResult('form', '.result', function(err, resultText) {
-      t.ok(!err, 'no error');
-      creatures['default'] = JSON.parse(resultText);
-      t.equal(creatures['default'].type,
-        creature.schema.properties.type.default,
-        "created creature has default type");
-      t.equal(creatures['default'].isAwesome,
-        creature.schema.properties.isAwesome.default,
-        "created creature has default awesomeness");
-      t.equal(creatures['default'].secret,
-        creature.schema.properties.secret.default, 
-        "form-created creature has default secret");
-      t.end();
+
+    //// try submitting with required field empty
+    //submitElementWithResult('form', '#life  > .controls > .help-inline', function(err, resultText) {
+    //  t.ok(!err, 'no error');
+    //  t.equal(resultText, 'life is required', 'form shows error when required field is blank');
+
+      // fill required field, then submit
+      typeIntoElement('#life > .controls > input', "10", function(err) {
+        t.ok(!err, 'no error');
+        submitElementWithResult('form', '.result', function(err, resultText) {
+          t.ok(!err, 'no error');
+          creatures['default'] = JSON.parse(resultText);
+          t.equal(creatures['default'].type,
+            creature.schema.properties.type.default,
+            "created creature has default type");
+          t.equal(creatures['default'].isAwesome,
+            creature.schema.properties.isAwesome.default,
+            "created creature has default awesomeness");
+          t.equal(creatures['default'].secret,
+            creature.schema.properties.secret.default,
+            "created creature has default secret");
+          t.equal(creatures['default'].life, 10,
+            "created creature has given life");
+          t.end();
+        });
+    //  });
     });
   });
 });
@@ -245,26 +259,6 @@ tap.test("get / with a creature, should default to all", function (t) {
     });
   });
 });
-
-// add to creature schema a "required" property with no defaults 
-creature.property('life', { type: "number", required: true });
-
-/*
-// TODO: fix this, problem is it accepts the empty string. is that ok?
-tap.test("cannot create a creature without required property", function (t) {
-
-  browser.get(baseUrl + "/creature/create", function (err, html) {
-    t.ok(!err, 'no error');
-    submitElementWithResult('form', '#life  > .controls > .help-inline', function(err, resultText){
-      console.log(err);
-      t.ok(!err, 'no error');
-      console.log(resultText);
-      t.equal(resultText, 'id must be unique', 'error message shows cannot use duplicate id');
-      t.end();
-    });
-  });
-});
-*/
 
 tap.test("create a creature (frank) with specified properties, can't use forms to access private property", function (t) {
 
@@ -290,7 +284,6 @@ tap.test("create a creature (frank) with specified properties, can't use forms t
   });
 });
 
-/*
 tap.test("there is only one frank: cannot create resource with duplicate id", function(t) {
 
   browser.get(baseUrl + "/creature/create", function (err, html) {
@@ -305,7 +298,6 @@ tap.test("there is only one frank: cannot create resource with duplicate id", fu
     });
   });
 });
-*/
 
 tap.test("find both creatures with empty form", function (t) {
 
@@ -313,12 +305,15 @@ tap.test("find both creatures with empty form", function (t) {
     t.ok(!err, 'no error');
     submitElementWithResult('form', '.result', function(err, resultText) {
       t.ok(!err, 'no error');
-      t.ok(deepEqual([creatures['default'],creatures['frank']], JSON.parse(resultText)), "created creatures are in find");
+      t.ok(deepEqual([creatures['default'],creatures['frank']],
+        JSON.parse(resultText)),
+        "created creatures are in find");
       t.end();
     });
   });
 });
 
+/*
 // TODO: should find show the dropdown for type? ie dragon unicorn puppy?
 // TODO: related, find fails to require types on properties (ie string in life and isAwesome)
 tap.test("find both creatures by type", function (t) {
@@ -351,6 +346,7 @@ tap.test("find no creatures that aren't awesome", function(t) {
     });
   });
 });
+*/
 
 tap.test("update frank's life by id, then find him by updated life", function (t) {
 
@@ -403,14 +399,29 @@ tap.test("(fail to) update frank's life to a string, form shows error", function
   });
 });
 
-/*
+tap.test("form handles error when trying to update resource with nonexistent id", function(t) {
+
+  browser.get(baseUrl + "/creature/update?id=franky", function (err, html) {
+    t.ok(!err, 'no error');
+    getElementText('#id > .controls > .help-inline', function(err, resultText) {
+      t.ok(!err, 'no error');
+      t.equal(resultText, 'franky not found', 'error message shows when going to update with id in url');
+      submitElementWithResult('form', '#id  > .controls > .help-inline', function(err, resultText){
+        t.ok(!err, 'no error');
+        t.equal(resultText, 'franky not found', 'error message shows when updating with id that does not exist');
+        t.end();
+      });
+    });
+  });
+});
+
 tap.test("poke frank", function (t) {
 
   browser.get(baseUrl + "/creature/poke", function (err, html) {
     t.ok(!err, 'no error');
     submitElementWithResult('form', '.result', function(err, resultText) {
       t.ok(!err, 'no error');
-      t.equal(resultText, 'owe!', 'frank was poked');
+      t.equal(resultText, '\"owe!\"', 'frank was poked');
       t.end();
     });
   });
@@ -420,10 +431,11 @@ tap.test("fire frank's lazer", function(t) {
 
   browser.get(baseUrl + "/creature/fire", function (err, html) {
     t.ok(!err, 'no error');
-    typeIntoElement('#power', '\uE003999', function(err) {
+    typeIntoElement('#power > .controls > input', '\uE003999', function(err) {
       t.ok(!err, 'no error');
       submitElementWithResult('form', '.result', function(err, resultText) {
         t.ok(!err, 'no error');
+        console.log(JSON.parse(resultText));
         t.ok(deepEqual({
           "status": "fired",
           "direction": "up",
@@ -436,6 +448,7 @@ tap.test("fire frank's lazer", function(t) {
     });
   });
 });
+/*
 
 tap.test("destroy frank by id, then fail to get him", function (t) {
 
@@ -496,14 +509,7 @@ tap.test("resurrect then update frank with updateOrCreate", function (t) {
   });
 });
 
-// TODO: fix create view so that create gives error.errors stuff when id is duplicate
-// related: figure out what to do with the error when submitting update w invalid id
-
-// TODO: change functionality of update with a prefilled id that does not exist
-
 // TODO: make it so that inputs ids are in control group, not input (done for string)
-
-// TODO: make it so forms's forms are tall enough to see letter 'y'
 
 /*
 tap.test('clean up and shut down browser', function (t) {
