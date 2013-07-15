@@ -5,11 +5,14 @@ persistence.schema.description = "enables persistence for resources";
 
 persistence.method('enable', enable);
 
-function enable (r, options) {
+function enable (r, datasource) {
 
-  if(typeof options === "string") {
-    options = {
-      type: options
+  if (!datasource) {
+    datasource = r.config.datasource;
+  }
+  else if(typeof datasource === "string") {
+    datasource = {
+      type: datasource
     };
   }
 
@@ -18,9 +21,9 @@ function enable (r, options) {
   //
   persistence.uuid = require('node-uuid');
 
-  resource.use(options.type);
-  resource.resources[options.type].start(function() {
-    return resource.resources[options.type].enable(r, options);
+  resource.use(datasource.type);
+  resource.resources[datasource.type].start(function() {
+    return resource.resources[datasource.type].enable(r, datasource);
   });
 }
 

@@ -11,13 +11,7 @@ jugglingdb.method('enable', enable);
 // allowing the resource to be instantiable and backed by a datasource
 //
 
-function enable (r, options) {
-
-  if(typeof options === "string") {
-    options = {
-      type: options
-    };
-  }
+function enable (r, datasource) {
 
   //
   // Require JugglingDB.Schema
@@ -34,15 +28,15 @@ function enable (r, options) {
   //
   // Create new JugglingDB schema, based on incoming datasource type
   //
-  var _type = mappings[options.type] || options.type || 'fs';
+  var _type = mappings[datasource.type] || datasource.type || 'fs';
   var schema = new Schema(_type, {
-    database: options.name || "big",
-    host: options.host,
-    port: options.port,
-    path: options.path || path.join(resource.helper.appDir, 'db'),
-    username: options.username,
-    password: options.password,
-    options: options.options,
+    database: datasource.name || "big",
+    host: datasource.host,
+    port: datasource.port,
+    path: datasource.path || path.join(resource.helper.appDir, 'db'),
+    username: datasource.username,
+    password: datasource.password,
+    options: datasource.options,
     https: true // TODO: check that HTTPS actually does something
   });
 
