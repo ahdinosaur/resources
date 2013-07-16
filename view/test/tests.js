@@ -1,6 +1,5 @@
 var test = require("tap").test,
   resource = require("resource"),
-  html = resource.use("html"),
   view = resource.use('view');
 
 test("start a view", function (t) {
@@ -352,3 +351,42 @@ test("nested views traverse upward to find parent layout", function(t) {
   });
 });
 
+test("integration with template-html resource", function (t) {
+  resource.use('template-html');
+  view.create( { templatePath: __dirname + '/basic-view/index.html'}, function (err, _view) {
+    t.ok(!err, 'no error');
+    t.ok(_view, 'view is returned');
+    _view.present({
+      user: {
+        name: 'Bob',
+        email: 'bob@bob.com'
+      }
+    }, function (err, result) {
+      t.ok(!err, 'no error');
+      t.ok(result, 'present returns result');
+      t.equal(result,
+        '<div class="user">\n  <div class="name">Bob</div>\n  <div class="email">bob@bob.com</div>\n</div>\n',
+        'present() returns correct result');
+      t.end();
+    });
+  });
+});
+
+test("integration with template-jade resource", function (t) {
+  resource.use('template-jade');
+  view.create( { path: __dirname + '/jade-view'}, function (err, _view) {
+    t.ok(!err, 'no error');
+    t.ok(_view, 'view is returned');
+    _view.index.present({
+      name: 'Bob',
+      email: 'bob@bob.com'
+    }, function (err, result) {
+      t.ok(!err, 'no error');
+      t.ok(result, 'present returns result');
+      t.equal(result,
+        '<h1>Bob</h1><p>bob@bob.com</p>',
+        'present() returns correct result');
+      t.end();
+    });
+  });
+});
