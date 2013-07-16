@@ -13,7 +13,7 @@ module['exports'] = function (options, callback) {
   var domWithLayout = function(error) {
     options.err = error;
     options.selector = '#forms-main';
-    self.layout(self.parent.parent.layout, options, callback);
+    self.layout(self.parent.layout, options, callback);
   };
 
   // legend should show method description or method name
@@ -23,7 +23,7 @@ module['exports'] = function (options, callback) {
   $('input[type="submit"]').attr('value', options.method);
 
   // if the action is to post, submit the form
-  if (options.action === 'post') {
+  if (options.action === 'post' && !options.error) {
     var cb = function (err, result) {
 
       // if there are errors, remove results and display errors on the forms
@@ -49,7 +49,7 @@ module['exports'] = function (options, callback) {
   } else {
     // show the form
     $('.results').remove();
-    showForm(options.data);
+    showForm(options.data, options.error);
   }
 
   function showForm (data, error) {

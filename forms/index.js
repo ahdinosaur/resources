@@ -128,8 +128,8 @@ function method (options, callback) {
   if (options.data) {
     options.data = coerceTypes(resource[options.resource].schema, options.data);
   }
-  view.create({ path: __dirname + '/view', input: "html"}, function (err, _view) {
-    var form = _view.form[options.method] || _view.form['method'];
+  view.create({ path: __dirname + '/view'}, function (err, _view) {
+    var form = _view[options.method] || _view['method'];
     form.present(options, callback);
   });
 }

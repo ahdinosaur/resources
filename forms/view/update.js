@@ -18,9 +18,21 @@ module['exports'] = function (options, callback) {
     // set any undefined properties in options.data
     r.get(options.id, function(err, _r) {
       if (err) {
+
+        // if this id wasn't found, add to errors to display on form
+        if (err.message === options.id + " not found") {
+          options.error = err;
+          options.error.errors = [{
+            property: "id",
+            message: err.message
+          }];
+          return finish();
+        }
+
+        // for other errors, pass to layout
         options.err = err;
         options.selector = "#forms-main";
-        return self.layout(self.parent.parent.layout, options, callback);
+        return self.layout(self.parent.layout, options, callback);
       }
 
       // use current instance to default options.data

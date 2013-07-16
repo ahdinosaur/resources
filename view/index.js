@@ -70,6 +70,7 @@ function create (options, callback) {
 view.middle = require('./middle');
 
 view.dependencies = {
+  "async": "*",
   "walk": "*",
   "cheerio": "*"
 };

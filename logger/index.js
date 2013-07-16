@@ -68,11 +68,11 @@ function put (input, callback) {
   if (Array.isArray(input)) {
     var keys = Object.keys(input[0]);
     input.forEach(function(item){
-      logger.data(JSON.stringify(item))
+      logger.data(JSON.stringify(item, null, 2))
     });
     return callback(null, input);
   }
-  logger.data(JSON.stringify(input))
+  logger.data(JSON.stringify(input, null, 2))
   return callback(null, input);
 };
 
