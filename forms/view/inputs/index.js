@@ -1,43 +1,41 @@
 module['exports'] = function (options, callback) {
 
-  var output = "", _control, v, 
+  var output = "",
       self = this,
       control = options.control;
-  //
-  // determine the type of control to render
-  //
-  _control = "string"; // forcing everything to string input as default for now
 
+  // if control is private, do not render
   if (control.private === true) {
-    // do not render
     return callback(null, '');
   }
 
-  if(control.type === "boolean") {
-    _control = "boolean";
-  }
+  //
+  // determine the type of control to render
+  //
+  // default everything to string input
+  var _control = (control.type) ? control.type : 'string';
 
+  // treat any as a string
+  if (_control === "any") { _control = "string"; }
+
+  // JSON schema has no enum type, so check if control has enums
   if(Array.isArray(control.enum)){
     _control = "enum";
   }
 
+  // TODO: remove this?
   if (typeof control.key !== 'undefined') {
     _control = "key";
   }
 
-  //
-  // determine if there is a View available for that type of control
-  //
+  // make sure there is a view available for this control's type
   if(typeof self.parent.parent.inputs[_control] === 'undefined') {
     throw new Error('invalid control ' + _control);
   }
 
-  //
-  // If there is an index.js available, use that as the presenter,
-  // if not, use the control itself
-  //
-  v = self.parent.parent.inputs[_control].index || self.parent.parent.inputs[_control];
+  // If there is an index.js available, use it. else use the control.
+  var v = self.parent.parent.inputs[_control].index || self.parent.parent.inputs[_control];
 
-  // Present the View template
+  // present the view template
   v.present(options, callback);
-}
+};

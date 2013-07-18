@@ -4,30 +4,28 @@
 
 module['exports'] = function (options, callback) {
 
-  //
-  // Todo: This load statement should be moved to Viewful
-  //
-  var $ = this.$.load(this.template),
+  var $ = this.$,
       input = options.control;
 
-  if(input.error) {
+  // handle errors
+  if(typeof input.error !== 'undefined') {
     $('.control-group').addClass('error');
     $('.help-inline').html(input.error.message);
   }
 
+  // label control
+  $('.control-group').attr('id', input.name);
   $('.control-label').attr('for', input.name);
   $('.control-label').html(input.name);
-  $('select').attr('id',  input.name);
+
+  // setup input
   $('select').attr('name', input.name);
   $('select').attr('placeholder', input.description || '');
   $('select option').html('Please select ' + input.name + '...');
 
-  var _options = input.enum;
-  _options.forEach(function(option){
-    var selected = "";
-    if(option === input.value) {
-      selected = ' SELECTED ';
-    }
+  // add each possible enum to dropdown and label the currently selected one
+  input.enum.forEach(function(option) {
+    var selected = (option === input.value) ? ' SELECTED ' : '';
     $('select').append('<option value=' + option + selected + '>' + option + '</option>'); // Bad string concat!
   });
 

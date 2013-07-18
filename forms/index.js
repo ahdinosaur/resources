@@ -126,6 +126,7 @@ forms.method("method", method, {
 
 function method (options, callback) {
   if (options.data) {
+  console.log("data:", options.data);
     options.data = coerceTypes(resource[options.resource].schema, options.data);
   }
   view.create({ path: __dirname + '/view'}, function (err, _view) {
@@ -155,7 +156,7 @@ function coerceTypes (schema, data) {
         break;
       case 'array':
         // TODO: refactor required for different array types
-        data[prop] = (data[prop] || '').replace(', ', '').split(',');
+        console.log("coercetype of array called");
         break;
       case 'number':
         var numbery = parseFloat(data[prop], 10);

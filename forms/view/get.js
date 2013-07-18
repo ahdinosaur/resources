@@ -12,7 +12,6 @@ module['exports'] = function (options, callback) {
         // if this id wasn't found, add to errors to display on form and don't post
       if (err && err.message === options.id + " not found") {
         options.action = 'get';
-        console.log("frank not found");
         options.error = err;
         options.error.errors = [{
           property: "id",

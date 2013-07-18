@@ -22,8 +22,12 @@ module['exports'] = function (options, callback) {
   // submit button should show method name
   $('input[type="submit"]').attr('value', options.method);
 
-  // if the action is to post, submit the form
-  if (options.action === 'post' && !options.error) {
+  //
+  // if the action is to post and submit type is this method, handle form submission
+  //
+  if (options.action === 'post' &&
+    options.data && options.data.__submit === options.method &&
+    !options.error) {
     var cb = function (err, result) {
 
       // if there are errors, remove results and display errors on the forms
@@ -45,9 +49,11 @@ module['exports'] = function (options, callback) {
     // submit the data
     return resource.invoke(rMethod, options.data, cb);
 
-  // otherwise if the action is not post,
+  //
+  // otherwise if the action is not post or submit type is not this method...
+  //
+  // show the form
   } else {
-    // show the form
     $('.results').remove();
     showForm(options.data, options.error);
   }

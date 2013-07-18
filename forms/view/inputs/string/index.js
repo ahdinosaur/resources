@@ -7,11 +7,13 @@ module['exports'] = function (options, callback) {
       $ = self.$,
       input = options.control;
 
+  // handle forms errors
   if(typeof input.error !== 'undefined') {
     $('.control-group').addClass('error');
     $('.help-inline').html(input.error.message);
   }
 
+  // label control
   $('.control-label').attr('for', input.name);
   $('.control-label').html(input.name);
 

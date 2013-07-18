@@ -27,6 +27,20 @@ tap.test("create test creature resource", function(t) {
   creature.property('isAwesome', { type: "boolean", default: true });
   creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
   creature.property('life', { type: "number", required: true });
+  creature.property('toys', {
+    type: "array",
+    required: false,
+    items: {
+      type: "string"
+    }
+  });
+  creature.property('guns', {
+    type: "array",
+    required: false,
+    items: {
+      type: "string"
+    }
+  });
 
 
   function poke (callback) {
@@ -142,6 +156,7 @@ var deepEqual = function(actual, expected) {
     assert.deepEqual(actual, expected);
   }
   catch (err) {
+    console.log(err);
     return false;
   }
   return true;
@@ -186,7 +201,6 @@ var typeIntoElement = function (selector, text, callback) {
     });
   });
 };
-
 //
 // forms tests
 //
@@ -198,6 +212,7 @@ tap.test("get / with no creatures", function (t) {
       t.ok(!err, 'no error');
       t.equal(title, 'big forms test', 'title is correct');
       getElementText('.result', function (err, result) {
+        console.log(err);
         t.ok(!err, 'no error');
           t.equal(result, "[]");
           t.end();
@@ -206,6 +221,7 @@ tap.test("get / with no creatures", function (t) {
   });
 });
 
+/*
 // NOTE: in addition to the signature,
 //       this inherently tests that create fills with default properties
 //       and that creating a resource with an empty id generates an id,
@@ -305,8 +321,8 @@ tap.test("find both creatures with empty form", function (t) {
     t.ok(!err, 'no error');
     submitElementWithResult('form', '.result', function(err, resultText) {
       t.ok(!err, 'no error');
-      t.ok(deepEqual([creatures['default'],creatures['frank']],
-        JSON.parse(resultText)),
+      t.ok(deepEqual(JSON.parse(resultText),
+        [creatures['default'],creatures['frank']]),
         "created creatures are in find");
       t.end();
     });
@@ -347,7 +363,7 @@ tap.test("find no creatures that aren't awesome", function(t) {
   });
 });
 */
-
+/*
 tap.test("update frank's life by id, then find him by updated life", function (t) {
 
   // update frank
@@ -435,7 +451,6 @@ tap.test("fire frank's lazer", function(t) {
       t.ok(!err, 'no error');
       submitElementWithResult('form', '.result', function(err, resultText) {
         t.ok(!err, 'no error');
-        console.log(JSON.parse(resultText));
         t.ok(deepEqual({
           "status": "fired",
           "direction": "up",
