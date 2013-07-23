@@ -25,8 +25,8 @@ tap.test("create test creature resource", function(t) {
 
   creature.property('type', { type: "string", enum: ['dragon', 'unicorn', 'pony'], default: "dragon"});
   creature.property('isAwesome', { type: "boolean", default: true });
-  //creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
-  //creature.property('life', { type: "number", required: true });
+  creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
+  creature.property('life', { type: "number", required: true });
   //creature.property('toys', {
   //  type: "array",
   //  required: false,
@@ -223,7 +223,6 @@ tap.test("get / with no creatures", function (t) {
     });
   });
 });
-/*
 
 // NOTE: in addition to the signature,
 //       this inherently tests that create fills with default properties
@@ -367,7 +366,7 @@ tap.test("find no creatures that aren't awesome", function(t) {
   });
 });
 */
-/*
+
 tap.test("update frank's life by id, then find him by updated life", function (t) {
 
   // update frank
@@ -548,6 +547,8 @@ tap.test("resurrect then update frank with updateOrCreate", function (t) {
 
 // TODO: make it so that inputs ids are in control group, not input (done for string)
 // TODO: write tests for arrays/objects/nested of each
+// TODO: add all the special goodies like date-time, sliders, etc. http://tools.ietf.org/html/draft-zyp-json-schema-03#section-5
+// TODO: keep track of which of the above goodies work by testing them as they are added
 
 /*
 tap.test('clean up and shut down browser', function (t) {

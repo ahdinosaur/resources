@@ -62,17 +62,22 @@ module['exports'] = function (options, callback) {
 
   function showForm (data, error) {
 
+    // a method's schema is of type object and has properties
+    rMethod.schema.type = rMethod.schema.type || 'object';
+    rMethod.schema.properties = rMethod.schema.properties || {};
+
     // append arguments to options
     options.data = options.data || {};
     options.schema = rMethod.schema;
     options.error = error;
 
     // call inputs presenter to handle delegation
-    self.parent.inputs.index.present(options, function(err, result){
+    self.parent.inputs.index.present(options, function(err, result) {
+      console.log("err: ",error);
       if (err) { return domWithLayout(err); }
       $('.inputs').append(result);
       // TODO: make it so that form errors get rid of this .error
-      return domWithLayout(error);
+      return domWithLayout(options.error);
     });
   }
 

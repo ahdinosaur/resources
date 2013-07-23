@@ -2,31 +2,31 @@ var async = require('async');
 
 module['exports'] = function (options, callback) {
 
-  var data = options.data || {},
-      errors = (options.error) ? options.error.errors : [],
-      schema = options.control || options.schema,
-      $ = this.$,
+  var $ = this.$,
       self = this;
 
   //console.log("data: ", options.data);
-  //console.log("schema: ", schema);
+  console.log("options.schema: ", options.schema);
   //console.log("error: ", options.error);
 
   // if schema is private, do not render
-  if (schema.private === true) {
-    return callback(null);
+  if (options.schema.private === true) {
+    return callback(null, '');
   }
+
+  // use control's default (if it has one) or the empty string
+  //control.value = control.default || '';
 
   //
   // determine schema's type, then render
   //
-  var schemaType = schema.type;
+  var schemaType = options.schema.type;
 
   // if schema type is not given, figure it out
   if (typeof schemaType === 'undefined') {
 
     // if there's no type but there are properties, this must be an object
-    if (schema.properties) {
+    if (options.schema.properties) {
       schemaType = 'object';
 
     // default everything else to string input
@@ -39,12 +39,12 @@ module['exports'] = function (options, callback) {
   if (schemaType === "any") { schemaType = "string"; }
 
   // JSON schema has no enum type, so check if schema has enums
-  if(Array.isArray(schema.enum)){
+  if(Array.isArray(options.schema.enum)){
     schemaType = "enum";
   }
 
   // TODO: remove this?
-  if (typeof schema.key !== 'undefined') {
+  if (typeof options.schema.key !== 'undefined') {
     schemaType = "key";
   }
 

@@ -31,11 +31,10 @@ module['exports'] = function (options, callback) {
   //
   // for each property, render appropriate view and append it to the dom
   //
-  console.log("\n");
-  console.log("OBJECT SCHEMA: ", options.schema);
-  console.log("\n");
+  //console.log("\n");
+  //console.log("OBJECT SCHEMA: ", options.schema);
+  //console.log("\n");
   async.eachSeries(Object.keys(props), function(property, callback) {
-
 
     //
     // create control as viewable property
@@ -51,22 +50,24 @@ module['exports'] = function (options, callback) {
     control.name = property;
 
     // if we have errors, add them to the control
+    // TODO: can/should this be in inputs index?
     if (options.error && options.error.errors) {
-      for (var i = 0; i < errors.length; i++) {
-        var e = errors[i];
+      for (var i = 0; i < options.error.errors.length; i++) {
+        var e = options.error.errors[i];
         if (e.property === control.name) {
           control.error = e;
           // pop from errors after adding error message to forms.
-          errors.splice(i, i+1);
+          options.error.errors.splice(i, i+1);
           // if we now have no more errors, forms handled it so dont pass error
-          if (errors.length === 0) {
+          if (options.error.errors.length === 0) {
             // TODO: somehow pass this info back
             options.error = null;
+            break;
           }
         }
       }
     }
-    console.log("async series. current control: ",control);
+    //console.log("async series. current control: ",control);
 
     // if the data we were given has this property, add it to control.
     // TODO: with the recursion, won't this cause name collisions?
@@ -78,20 +79,22 @@ module['exports'] = function (options, callback) {
       control.value = control.default || '';
     }
 
+    //
     // present this control and add its view to the dom
+    //
     options.schema = control;
     self.parent.index.present(options, function(err, result) {
       if (err) { return callback(err); }
-      console.log("\n");
-      console.log("result: ",result);
-      console.log("\n");
+      //console.log("\n");
+      //console.log("result: ",result);
+      //console.log("\n");
       $.root().append(result);
       return callback(null);
     });
 
   // async series callback
   }, function(err) {
-    console.log("ASYNC CALLBACK WITH: ", $.html());
+    //console.log("ASYNC CALLBACK WITH: ", $.html());
       if (err) { return callback(err); }
       return callback(null, $.html());
     });

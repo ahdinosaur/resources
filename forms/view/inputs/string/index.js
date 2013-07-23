@@ -7,6 +7,8 @@ module['exports'] = function (options, callback) {
       $ = self.$,
       input = options.schema;
 
+  console.log("input: ", input);
+
   // handle forms errors
   if(typeof input.error !== 'undefined') {
     $('.control-group').addClass('error');
