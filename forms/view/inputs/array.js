@@ -39,7 +39,9 @@ module['exports'] = function (options, callback) {
 
   var self = this,
       $ = self.$,
-      input = options.control;
+      input = options.schema;
+
+  console.log("items", input.items);
 
   // convert possible string to array
   if (typeof input.value === 'string') {
@@ -79,7 +81,8 @@ module['exports'] = function (options, callback) {
 
   // make a new control box for each present element
   for (var i = submitNumber - 1; i >= 0; i--) {
-    // TODO: remove defaulting elements to whitespace.
+    // TODO: remove defaulting elements to whitespace, it's necessary
+    //       because otherwise pressing add multiple times doesn't add many boxes
     var element = input.value[i] || ' ';
     console.log("element: ", element);
 

@@ -5,7 +5,7 @@ module['exports'] = function (options, callback) {
 
   var self = this,
       $ = self.$,
-      input = options.control;
+      input = options.schema;
 
   // handle forms errors
   if(typeof input.error !== 'undefined') {

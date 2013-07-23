@@ -25,22 +25,25 @@ tap.test("create test creature resource", function(t) {
 
   creature.property('type', { type: "string", enum: ['dragon', 'unicorn', 'pony'], default: "dragon"});
   creature.property('isAwesome', { type: "boolean", default: true });
-  creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
-  creature.property('life', { type: "number", required: true });
-  creature.property('toys', {
-    type: "array",
-    required: false,
-    items: {
-      type: "string"
-    }
-  });
-  creature.property('guns', {
-    type: "array",
-    required: false,
-    items: {
-      type: "string"
-    }
-  });
+  //creature.property('secret', { type: "string", private: true, default: "i touch myself at night"});
+  //creature.property('life', { type: "number", required: true });
+  //creature.property('toys', {
+  //  type: "array",
+  //  required: false,
+  //  items: {
+  //    type: "string"
+  //  }
+  //});
+  //creature.property('guns', {
+  //  type: "array",
+  //  required: false,
+  //  items: {
+  //    type: "array",
+  //    items: {
+  //      type: "string"
+  //    }
+  //  }
+  //});
 
 
   function poke (callback) {
@@ -94,7 +97,7 @@ tap.test('use the layout', function (t) {
   t.ok(layout, "layout is defined");
   view.create({
     template:
-      /*jshint multistr: true */
+      // jshint multistr: true
       '\
       <html>\
       <head>\
@@ -201,6 +204,7 @@ var typeIntoElement = function (selector, text, callback) {
     });
   });
 };
+
 //
 // forms tests
 //
@@ -212,7 +216,6 @@ tap.test("get / with no creatures", function (t) {
       t.ok(!err, 'no error');
       t.equal(title, 'big forms test', 'title is correct');
       getElementText('.result', function (err, result) {
-        console.log(err);
         t.ok(!err, 'no error');
           t.equal(result, "[]");
           t.end();
@@ -220,8 +223,8 @@ tap.test("get / with no creatures", function (t) {
     });
   });
 });
-
 /*
+
 // NOTE: in addition to the signature,
 //       this inherently tests that create fills with default properties
 //       and that creating a resource with an empty id generates an id,
@@ -330,6 +333,7 @@ tap.test("find both creatures with empty form", function (t) {
 });
 
 /*
+// TODO: should find display fields for private properties? (it currently does)
 // TODO: should find show the dropdown for type? ie dragon unicorn puppy?
 // TODO: related, find fails to require types on properties (ie string in life and isAwesome)
 tap.test("find both creatures by type", function (t) {
@@ -416,6 +420,22 @@ tap.test("(fail to) update frank's life to a string, form shows error", function
 });
 
 tap.test("form handles error when trying to update resource with nonexistent id", function(t) {
+
+  browser.get(baseUrl + "/creature/update?id=franky", function (err, html) {
+    t.ok(!err, 'no error');
+    getElementText('#id > .controls > .help-inline', function(err, resultText) {
+      t.ok(!err, 'no error');
+      t.equal(resultText, 'franky not found', 'error message shows when going to update with id in url');
+      submitElementWithResult('form', '#id  > .controls > .help-inline', function(err, resultText){
+        t.ok(!err, 'no error');
+        t.equal(resultText, 'franky not found', 'error message shows when updating with id that does not exist');
+        t.end();
+      });
+    });
+  });
+});
+
+tap.test("add/remove elements to/from", function(t) {
 
   browser.get(baseUrl + "/creature/update?id=franky", function (err, html) {
     t.ok(!err, 'no error');
@@ -527,6 +547,7 @@ tap.test("resurrect then update frank with updateOrCreate", function (t) {
 });
 
 // TODO: make it so that inputs ids are in control group, not input (done for string)
+// TODO: write tests for arrays/objects/nested of each
 
 /*
 tap.test('clean up and shut down browser', function (t) {

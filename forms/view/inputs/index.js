@@ -1,41 +1,62 @@
+var async = require('async');
+
 module['exports'] = function (options, callback) {
 
-  var output = "",
-      self = this,
-      control = options.control;
+  var data = options.data || {},
+      errors = (options.error) ? options.error.errors : [],
+      schema = options.control || options.schema,
+      $ = this.$,
+      self = this;
 
-  // if control is private, do not render
-  if (control.private === true) {
-    return callback(null, '');
+  //console.log("data: ", options.data);
+  //console.log("schema: ", schema);
+  //console.log("error: ", options.error);
+
+  // if schema is private, do not render
+  if (schema.private === true) {
+    return callback(null);
   }
 
   //
-  // determine the type of control to render
+  // determine schema's type, then render
   //
-  // default everything to string input
-  var _control = (control.type) ? control.type : 'string';
+  var schemaType = schema.type;
+
+  // if schema type is not given, figure it out
+  if (typeof schemaType === 'undefined') {
+
+    // if there's no type but there are properties, this must be an object
+    if (schema.properties) {
+      schemaType = 'object';
+
+    // default everything else to string input
+    } else {
+      schemaType = 'string';
+    }
+  }
 
   // treat any as a string
-  if (_control === "any") { _control = "string"; }
+  if (schemaType === "any") { schemaType = "string"; }
 
-  // JSON schema has no enum type, so check if control has enums
-  if(Array.isArray(control.enum)){
-    _control = "enum";
+  // JSON schema has no enum type, so check if schema has enums
+  if(Array.isArray(schema.enum)){
+    schemaType = "enum";
   }
 
   // TODO: remove this?
-  if (typeof control.key !== 'undefined') {
-    _control = "key";
+  if (typeof schema.key !== 'undefined') {
+    schemaType = "key";
   }
 
-  // make sure there is a view available for this control's type
-  if(typeof self.parent.parent.inputs[_control] === 'undefined') {
-    throw new Error('invalid control ' + _control);
+  // make sure there is a view available for this schema's type
+  if(typeof self.parent.parent.inputs[schemaType] === 'undefined') {
+    throw new Error('invalid schema ' + schemaType);
   }
 
-  // If there is an index.js available, use it. else use the control.
-  var v = self.parent.parent.inputs[_control].index || self.parent.parent.inputs[_control];
+  // If there is an index.js available, use it. else use the schema.
+  // TODO: is parent.parent relaly necessary?
+  var v = self.parent.parent.inputs[schemaType].index || self.parent.parent.inputs[schemaType];
 
-  // present the view template
+  // present this schema
   v.present(options, callback);
 };

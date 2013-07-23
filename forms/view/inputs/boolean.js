@@ -4,7 +4,7 @@
 
 module['exports'] = function (options, callback) {
   var $ = this.$,
-      input = options.control;
+      input = options.schema;
 
   // handle errors
   if(typeof input.error !== 'undefined') {

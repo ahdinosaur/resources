@@ -5,7 +5,7 @@ module['exports'] = function (options, callback) {
 
   var self = this,
       $ = self.$,
-      input = options.control;
+      input = options.schema;
 
   $('input').attr('value', input.value.toString());
   $('input').attr('placeholder', input.description || '');
